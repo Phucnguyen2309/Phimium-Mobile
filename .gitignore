@@ -44,3 +44,12 @@ Thumbs.db
 # JVM crash logs
 hs_err_pid*
 replay_pid*
+
+# Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+**/build/
