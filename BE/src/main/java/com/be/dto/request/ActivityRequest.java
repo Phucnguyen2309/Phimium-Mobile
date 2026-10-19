@@ -1,0 +1,96 @@
+package com.be.dto.request;
+
+import com.be.enums.ActivityStatus;
+import com.be.enums.MatchingTag;
+import com.be.enums.TourType;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class ActivityRequest {
+
+    @NotBlank(message = "Title is required")
+    @Size(max = 200)
+    private String title;
+
+    private String description;
+
+    @Schema(description = "Mô tả tiếng Anh (tùy chọn). Bỏ trống thì Backend tự dịch từ mô tả tiếng Việt bằng AI")
+    private String descriptionEn;
+
+    @NotNull(message = "Tags must not be null")
+    @Size(max = 16, message = "A tour can have at most 16 matching tags")
+    @Schema(description = "Shared matching tags; omit to create a tour without tags",
+            example = "[\"PHOTOGRAPHY\", \"RETRO\"]")
+    private Set<@NotNull MatchingTag> tags = new LinkedHashSet<>();
+
+    @NotNull(message = "Activity type is required")
+    private TourType activityType;
+
+    @NotNull(message = "Registration deadline is required")
+    private LocalDateTime registrationDeadline;
+
+    @DecimalMin(value = "-180.0")
+    @DecimalMax(value = "180.0")
+    private BigDecimal longitude;
+
+    @DecimalMin(value = "-90.0")
+    @DecimalMax(value = "90.0")
+    private BigDecimal latitude;
+
+    @NotBlank(message = "Location name is required")
+    @Size(max = 255)
+    private String locationName;
+
+    @NotBlank(message = "Address is required")
+    @Size(max = 500)
+    private String address;
+
+    @NotNull(message = "Participation fee is required")
+    @DecimalMin(value = "0.0", inclusive = true)
+    private BigDecimal participationFee = BigDecimal.ZERO;
+
+    @DecimalMin(value = "0.0", inclusive = true)
+    private BigDecimal childParticipationFee;
+
+    @NotNull
+    @Min(value = 2, message = "Số lượng khách tối thiểu cho mỗi tour phải từ 2 người trở lên")
+    @Schema(example = "2")
+    private Integer minimumParticipants;
+
+    @NotNull
+    @Min(1)
+    private Integer maximumParticipants;
+
+    @Min(1)
+    private Integer groupMinSize = 2;
+
+    @Min(1)
+    private Integer groupMaxSize = 4;
+
+    private ActivityStatus status = ActivityStatus.PUBLISHED;
+
+
+    @AssertTrue(message = "Maximum participants must be greater than or equal to minimum participants")
+    public boolean isParticipantRangeValid() {
+        return minimumParticipants == null
+                || maximumParticipants == null
+                || maximumParticipants >= minimumParticipants;
+    }
+}

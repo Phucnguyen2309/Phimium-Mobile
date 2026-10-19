@@ -1,0 +1,174 @@
+package com.be.entity;
+
+import com.be.enums.ActivityStatus;
+import com.be.enums.MatchingTag;
+import com.be.enums.TourType;
+import com.be.util.DateTimeUtils;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
+import jakarta.persistence.OrderColumn;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Min;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+
+@Entity
+@Table(name = "activities")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Activity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "activity_id", updatable = false, nullable = false)
+    private UUID id;
+
+    @ElementCollection
+    @CollectionTable(name = "activity_matching_tags", joinColumns = @JoinColumn(name = "activity_id"))
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tag", nullable = false, length = 40)
+    @Builder.Default
+    private Set<MatchingTag> tags = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "activity", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("stopOrder ASC, stopId ASC")
+    @Builder.Default
+    private List<ItineraryStop> itineraryStops = new ArrayList<>();
+
+    @Column(name = "title", nullable = false, length = 200)
+    private String title;
+
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+
+    // Bản tiếng Anh của mô tả (admin nhập hoặc AI dịch). null -> FE dùng bản tiếng Việt
+    @Column(name = "description_en", columnDefinition = "TEXT")
+    private String descriptionEn;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "activity_type", nullable = false, length = 30)
+    private TourType activityType;
+
+    @Column(name = "thumbnail_url", length = 500)
+    private String thumbnailUrl;
+
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "activity_images", joinColumns = @JoinColumn(name = "activity_id"))
+    @OrderColumn(name = "image_order")
+    @Column(name = "image_url", nullable = false, length = 2048)
+    @Builder.Default
+    private List<String> imageUrls = new ArrayList<>();
+
+    @Column(name = "location_name", nullable = false, length = 255)
+    private String locationName;
+
+    @Column(name = "address", nullable = false, length = 500)
+    private String address;
+
+    @DecimalMin(value = "-180.0", message = "Longitude must be greater than or equal to -180")
+    @DecimalMax(value = "180.0", message = "Longitude must be less than or equal to 180")
+    private BigDecimal longitude;
+
+    @DecimalMin(value = "-90.0", message = "Latitude must be greater than or equal to -90")
+    @DecimalMax(value = "90.0", message = "Latitude must be less than or equal to 90")
+    private BigDecimal latitude;
+
+    @DecimalMin(value = "0.0", inclusive = true)
+    @Column(name = "participation_fee", nullable = false, precision = 12, scale = 2)
+    private BigDecimal participationFee;
+
+    @DecimalMin(value = "0.0", inclusive = true)
+    @Column(name = "child_participation_fee", precision = 12, scale = 2)
+    private BigDecimal childParticipationFee;
+
+    @Min(1)
+    @Column(name = "minimum_participants", nullable = false)
+    private Integer minimumParticipants;
+
+    @Min(1)
+    @Column(name = "maximum_participants", nullable = false)
+    private Integer maximumParticipants;
+
+    @Min(1)
+    @Column(name = "group_min_size", nullable = false)
+    private Integer groupMinSize = 4;
+
+    @Min(1)
+    @Column(name = "group_max_size", nullable = false)
+    private Integer groupMaxSize = 6;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 30)
+    private ActivityStatus status = ActivityStatus.PUBLISHED;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "created_by", nullable = false, foreignKey = @ForeignKey(name = "fk_activity_created_by"))
+    private User createdBy;
+
+    @OneToMany(mappedBy = "activity", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<ActivityDeparture> departures = new ArrayList<>();
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        LocalDateTime now = DateTimeUtils.nowVietnam();
+        createdAt = now;
+        updatedAt = now;
+        if (status == null) status = ActivityStatus.PUBLISHED;
+        if (participationFee == null) participationFee = BigDecimal.ZERO;
+        if (groupMinSize == null) groupMinSize = 4;
+        if (groupMaxSize == null) groupMaxSize = 6;
+    }
+
+    public void addDeparture(ActivityDeparture departure) {
+        if (departures == null) {
+            departures = new ArrayList<>();
+        }
+
+        departures.add(departure);
+        departure.setActivity(this);
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = DateTimeUtils.nowVietnam();
+    }
+}

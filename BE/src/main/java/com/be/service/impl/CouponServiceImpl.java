@@ -1,0 +1,142 @@
+package com.be.service.impl;
+
+import com.be.dto.request.CreateCouponRequest;
+import com.be.dto.request.UpdateCouponRequest;
+import com.be.dto.response.CouponResponse;
+import com.be.entity.Coupon;
+import com.be.enums.CouponDiscountType;
+import com.be.enums.CouponStatus;
+import com.be.exception.AppException;
+import com.be.exception.ErrorCode;
+import com.be.mapper.CouponMapper;
+import com.be.repository.CouponRepository;
+import com.be.service.CouponService;
+import com.be.util.DateTimeUtils;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+
+@Service
+@RequiredArgsConstructor
+public class CouponServiceImpl implements CouponService {
+
+    private final CouponRepository couponRepository;
+    private final CouponMapper couponMapper;
+
+    @Override
+    public Coupon validateAndGetCoupon(String code, BigDecimal subtotal) {
+        if (code == null || code.trim().isEmpty()) {
+            return null;
+        }
+
+        Coupon coupon = couponRepository.findByCode(code)
+                .orElseThrow(() -> new AppException(ErrorCode.COUPON_NOT_FOUND));
+
+        if (coupon.getStatus() != CouponStatus.ACTIVE) {
+            throw new AppException(ErrorCode.COUPON_INACTIVE);
+        }
+
+        LocalDateTime now = DateTimeUtils.nowVietnam();
+        if (now.isBefore(coupon.getValidFrom()) || now.isAfter(coupon.getValidUntil())) {
+            throw new AppException(ErrorCode.COUPON_EXPIRED);
+        }
+
+        if (coupon.getUsageLimit() != null && coupon.getUsedCount() >= coupon.getUsageLimit()) {
+            throw new AppException(ErrorCode.COUPON_USAGE_LIMIT_REACHED);
+        }
+
+        if (coupon.getMinimumOrderAmount() != null && subtotal.compareTo(coupon.getMinimumOrderAmount()) < 0) {
+            throw new AppException(ErrorCode.COUPON_MINIMUM_NOT_MET);
+        }
+
+        return coupon;
+    }
+
+    @Override
+    public BigDecimal calculateDiscount(Coupon coupon, BigDecimal subtotal) {
+        if (coupon == null) {
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal discount;
+        if (coupon.getDiscountType() == CouponDiscountType.PERCENTAGE) {
+            discount = subtotal.multiply(coupon.getDiscountValue())
+                    .divide(BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
+
+            if (coupon.getMaximumDiscountAmount() != null && discount.compareTo(coupon.getMaximumDiscountAmount()) > 0) {
+                discount = coupon.getMaximumDiscountAmount();
+            }
+        } else {
+            discount = coupon.getDiscountValue();
+        }
+
+        if (discount.compareTo(subtotal) > 0) {
+            discount = subtotal;
+        }
+
+        return discount;
+    }
+    @Override
+    @Transactional
+    public Coupon createCoupon(CreateCouponRequest request) {
+        if (couponRepository.findByCode(request.getCode().trim().toUpperCase()).isPresent()) {
+            throw new AppException(ErrorCode.COUPON_ALREADY_EXISTS);
+        }
+
+        if (request.getValidUntil().isBefore(request.getValidFrom())) {
+            throw new AppException(ErrorCode.INVALID_COUPON_DATE_RANGE);
+        }
+
+        Coupon coupon = couponMapper.toEntity(request);
+        return couponRepository.save(coupon);
+    }
+
+    @Override
+    public List<Coupon> getAllCoupons() {
+        return couponRepository.findAll();
+    }
+
+    @Override
+    @Transactional
+    public Coupon toggleCouponStatus(UUID couponId) {
+        Coupon coupon = couponRepository.findById(couponId)
+                .orElseThrow(() -> new AppException(ErrorCode.COUPON_NOT_FOUND));
+
+        if (coupon.getStatus() == CouponStatus.ACTIVE) {
+            coupon.setStatus(CouponStatus.INACTIVE);
+        } else {
+            coupon.setStatus(CouponStatus.ACTIVE);
+        }
+
+        return couponRepository.save(coupon);
+    }
+    @Override
+    @Transactional
+    public CouponResponse updateCoupon(UUID couponId, UpdateCouponRequest request) {
+        Coupon coupon = couponRepository.findById(couponId)
+                .orElseThrow(() -> new AppException(ErrorCode.COUPON_NOT_FOUND));
+
+        // 1. Kiểm tra tính hợp lệ của khoảng thời gian
+        if (request.getValidUntil().isBefore(request.getValidFrom())
+                || request.getValidUntil().isEqual(request.getValidFrom())) {
+            throw new AppException(ErrorCode.INVALID_COUPON_DATE_RANGE);
+        }
+
+        // 2. Nếu đổi sang mã code khác, kiểm tra code mới đã tồn tại chưa
+        String newCode = request.getCode().trim().toUpperCase();
+        if (!coupon.getCode().equalsIgnoreCase(newCode) && couponRepository.existsByCode(newCode)) {
+            throw new AppException(ErrorCode.COUPON_ALREADY_EXISTS);
+        }
+
+        couponMapper.updateEntity(request, coupon);
+
+        // 4. Lưu và trả response qua mapper
+        Coupon updated = couponRepository.save(coupon);
+        return couponMapper.toResponse(updated);
+    }
+}

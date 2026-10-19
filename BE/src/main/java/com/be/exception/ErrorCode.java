@@ -1,0 +1,432 @@
+package com.be.exception;
+
+import lombok.Getter;
+import org.springframework.http.HttpStatus;
+
+@Getter
+public enum ErrorCode {
+    ITINERARY_STOP_NOT_FOUND(6101, HttpStatus.NOT_FOUND, "Itinerary stop not found for this activity"),
+    AI_NOT_CONFIGURED(6001, HttpStatus.SERVICE_UNAVAILABLE, "Gemini API key/model are not configured"),
+    AI_UNAVAILABLE(6002, HttpStatus.SERVICE_UNAVAILABLE, "AI matching is temporarily unavailable"),
+    AI_INVALID_RESPONSE(6003, HttpStatus.BAD_GATEWAY, "AI returned an invalid matching response"),
+    AI_RATE_LIMITED(6004, HttpStatus.TOO_MANY_REQUESTS, "Too many matching requests; please try again later"),
+    MATCH_RESULT_NOT_FOUND(6005, HttpStatus.NOT_FOUND, "Matching result not found"),
+    MATCH_RESULT_EXPIRED(6006, HttpStatus.CONFLICT, "Matching result expired; please search again"),
+    MATCH_RESULT_CHANGED(6007, HttpStatus.CONFLICT, "Matching conditions changed; please confirm a new match"),
+    MATCH_RESULT_ALREADY_USED(6008, HttpStatus.CONFLICT, "Matching result has already been used"),
+    BOOKING_EXPIRED(3010, HttpStatus.CONFLICT, "Booking hold expired; please book again"),
+    PAYMENT_REVIEW_REQUIRED(9010, HttpStatus.CONFLICT, "Payment requires manual review"),
+    SEPAY_NOT_CONFIGURED(9011, HttpStatus.SERVICE_UNAVAILABLE, "SePay configuration is incomplete"),
+    INVALID_PAYMENT_NOTIFICATION(9012, HttpStatus.BAD_REQUEST, "Invalid payment notification"),
+    INVALID_GOOGLE_TOKEN(1010, HttpStatus.UNAUTHORIZED, "Invalid Google token"),
+    PROFILE_INCOMPLETE(1011, HttpStatus.FORBIDDEN, "Profile incomplete"),
+    ACCOUNT_BLOCKED(1012, HttpStatus.FORBIDDEN, "Account is inactive"),
+    GOOGLE_ACCOUNT_ALREADY_LINKED(1013, HttpStatus.CONFLICT, "Google account already linked"),
+    GOOGLE_ACCOUNT_LINKED_TO_ANOTHER_USER(1014, HttpStatus.CONFLICT, "Google account linked to another user"),
+    GOOGLE_EMAIL_DOES_NOT_MATCH(1015, HttpStatus.BAD_REQUEST, "Google email does not match"),
+    PHONE_ALREADY_EXISTS(1016, HttpStatus.CONFLICT, "Phone already exists"),
+    INVALID_ONBOARDING_TOKEN(1017, HttpStatus.UNAUTHORIZED, "Invalid onboarding token"),
+    ONBOARDING_TOKEN_EXPIRED(1018, HttpStatus.UNAUTHORIZED, "Onboarding token expired"),
+    PASSWORD_LOGIN_UNAVAILABLE(1019, HttpStatus.BAD_REQUEST, "This account does not have password login enabled."),
+    AUTH_CONFLICT(1020, HttpStatus.CONFLICT, "Account information conflicts with an existing account"),
+
+// ================= USER & AUTH (1000 - 1999) =================
+
+    USER_NOT_FOUND(
+            1001,
+            HttpStatus.BAD_REQUEST,
+            "Tên đăng nhập không tồn tại"
+    ),
+    USER_ID_NOT_FOUND(
+            1005,
+            HttpStatus.NOT_FOUND,
+            "UserId không tồn tại"
+    ),
+
+    INVALID_CREDENTIALS(
+            1002,
+            HttpStatus.UNAUTHORIZED,
+            "Incorrect username or password"
+    ),
+
+    USER_NOT_AUTHORIZED(
+            1003,
+            HttpStatus.FORBIDDEN,
+            "You are not authorized to perform this action"
+    ),
+
+    EMAIL_ALREADY_EXISTS(
+            1004,
+            HttpStatus.CONFLICT,
+            "Email already exists"
+    ),
+    EMAIL_NOT_VERIFIED(
+            1005,
+            HttpStatus.BAD_REQUEST,
+            "Email chưa được xác thực. Vui lòng nhập OTP để xác thực email."
+    ),
+
+    INVALID_TOKEN(
+            1006,
+            HttpStatus.UNAUTHORIZED,
+            "Invalid token"
+    ),
+
+// ================= GROUP (2000 - 2999) =================
+
+    GROUP_NOT_FOUND(
+            2001,
+            HttpStatus.NOT_FOUND,
+            "Activity group not found"
+    ),
+
+    GROUP_ACTIVITY_MISMATCH(
+            2002,
+            HttpStatus.BAD_REQUEST,
+            "Group does not belong to the registered activity"
+    ),
+
+    GROUP_IS_FULL(
+            2003,
+            HttpStatus.BAD_REQUEST,
+            "Activity group is full"
+    ),
+
+// ================= REGISTRATION (3000 - 3999) =================
+
+    REGISTRATION_NOT_FOUND(
+            3001,
+            HttpStatus.NOT_FOUND,
+            "Registration not found"
+    ),
+
+    REGISTRATION_ALREADY_EXISTS(
+            3002,
+            HttpStatus.CONFLICT,
+            "User has already registered for this activity"
+    ),
+
+    REGISTRATION_ALREADY_CANCELLED(
+            3003,
+            HttpStatus.BAD_REQUEST,
+            "Registration has already been cancelled"
+    ),
+
+    REGISTRATION_CANNOT_BE_CANCELLED(
+            3004,
+            HttpStatus.BAD_REQUEST,
+            "This registration cannot be cancelled"
+    ),
+
+    REGISTRATION_CANNOT_CHECK_IN(
+            3005,
+            HttpStatus.BAD_REQUEST,
+            "Registration is not eligible for check-in"
+    ),
+
+    REGISTRATION_ALREADY_CHECKED_IN(
+            3006,
+            HttpStatus.CONFLICT,
+            "Registration has already been checked in"
+    ),
+    INVALID_GUEST_COUNT(
+            3007,
+            HttpStatus.BAD_REQUEST,
+            "Must have at least 1 guest"
+    ),
+    INVALID_REGISTRATION_STATUS(
+            3008,
+            HttpStatus.BAD_REQUEST,
+            "Registration status is not valid for this operation"
+    ),
+    AT_LEAST_ONE_ADULT_REQUIRED(
+            3009,
+            HttpStatus.BAD_REQUEST,
+            "At least one adult (>= 1) is required to book a tour"
+    ),
+// ================= COUPON (4500 - 4599) =================
+
+    COUPON_NOT_FOUND(
+            4501,
+            HttpStatus.NOT_FOUND,
+            "Coupon code not found"
+    ),
+
+    COUPON_INACTIVE(
+            4502,
+            HttpStatus.BAD_REQUEST,
+            "Coupon is currently inactive"
+    ),
+
+    COUPON_EXPIRED(
+            4503,
+            HttpStatus.BAD_REQUEST,
+            "Coupon has expired or is not yet valid"
+    ),
+
+    COUPON_USAGE_LIMIT_REACHED(
+            4504,
+            HttpStatus.BAD_REQUEST,
+            "Coupon usage limit has been reached"
+    ),
+
+    COUPON_MINIMUM_NOT_MET(
+            4505,
+            HttpStatus.BAD_REQUEST,
+            "Order subtotal does not meet the minimum amount required for this coupon"
+    ),
+    COUPON_NOT_APPLICABLE(
+            4506,
+            HttpStatus.BAD_REQUEST,
+            "The provided coupon cannot be applied to this booking"
+    ),
+
+    COUPON_ALREADY_EXISTS(
+            4507,
+            HttpStatus.CONFLICT,
+            "Coupon code already exists"
+    ),
+    INVALID_COUPON_DATE_RANGE(
+            4508,
+            HttpStatus.BAD_REQUEST,
+            "Valid until date must be after valid from date"
+    ),
+    // ================= ACTIVITY & DEPARTURE (5000 - 5999) =================
+
+    ACTIVITY_NOT_FOUND(
+            5001,
+            HttpStatus.NOT_FOUND,
+            "Activity not found"
+    ),
+
+    DEPARTURE_NOT_FOUND(
+            5002,
+            HttpStatus.NOT_FOUND,
+            "Activity departure not found"
+    ),
+
+    DEPARTURE_NOT_AVAILABLE(
+            5003,
+            HttpStatus.CONFLICT,
+            "Activity departure is closed or cancelled"
+    ),
+
+    DEPARTURE_IN_PAST(
+            5004,
+            HttpStatus.BAD_REQUEST,
+            "Cannot register for a past departure"
+    ),
+
+    INSUFFICIENT_CAPACITY(
+            5005,
+            HttpStatus.CONFLICT,
+            "Insufficient departure capacity"
+    ),
+    ACTIVITY_CANNOT_BE_DELETED(
+            5006,
+            HttpStatus.BAD_REQUEST,
+            "Tours with scheduled departures or existing bookings cannot be deleted"
+    ),
+    CAPACITY_LESS_THAN_MINIMUM_PARTICIPANTS(
+            5007,
+            HttpStatus.BAD_REQUEST,
+            "The capacity must not be less than the tour's minimum number of participants"
+    ),
+// ================= COMMON (9000 - 9999) =================
+
+    VALIDATION_ERROR(
+            9001,
+            HttpStatus.BAD_REQUEST,
+            "Validation failed"
+    ),
+
+    INTERNAL_SERVER_ERROR(
+            9999,
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            "Internal server error"
+    ),
+
+    // ==================== Cloudinary ==============
+    CLOUDINARY_ERROR(
+            9999,
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            "cloudinary error"
+    ),
+    // ========= BUDDY =====
+    USER_ALREADY_BUDDY(
+            4001,
+            HttpStatus.CONFLICT,
+            "User is already a Buddy"
+    ),
+
+    BUDDY_ALREADY_EXISTS(
+            4002,
+            HttpStatus.CONFLICT,
+            "Buddy profile already exists"
+    ), BUDDY_NOT_FOUND(
+            4003,
+            HttpStatus.NOT_FOUND,
+            "Buddy not found"
+    ),
+    BUDDY_SCHEDULE_CONFLICT(
+            4004,
+            HttpStatus.CONFLICT,
+            "Buddy has a schedule conflict with this tour"
+    ),
+    BUDDY_SUSPENDED_BY_ADMIN(
+            4005,
+            HttpStatus.FORBIDDEN,
+            "Your account has been temporarily suspended by the administrator and cannot be reactivated by you"
+    ),
+    BUDDY_HAS_URGENT_TOUR(
+            4006,
+            HttpStatus.BAD_REQUEST,
+                    "You have a tour shift departing within the next 24 hours. You cannot take a break at this time; please contact the Admin!"
+    ),
+    INSUFFICIENT_BUDDIES_AVAILABLE(
+            4007,
+            HttpStatus.CONFLICT,
+            "Không đủ Hướng dẫn viên (Buddy) khả dụng để phục vụ số lượng khách của chuyến đi này"
+    ),
+    // ================= GUIDELINE (6000 - 6999) =================
+    GUIDELINE_NOT_FOUND(
+            6001,
+            HttpStatus.NOT_FOUND,
+            "Guideline not found for this activity"
+    ),
+
+    GUIDELINE_ALREADY_EXISTS(
+            6002,
+            HttpStatus.CONFLICT,
+            "Guideline already exists for this activity. Please use update instead"
+    ),
+
+    FEEDBACK_ALREADY_EXISTS(
+            7001,
+            HttpStatus.CONFLICT,
+            "Feedback has already been submitted for this registration"
+    ),
+    FEEDBACK_NOT_FOUND(
+            7002,
+            HttpStatus.NOT_FOUND,
+            "Feedback not found"
+    ),
+    CHECKIN_CLOSED(
+            8001,
+            HttpStatus.BAD_REQUEST,
+        "Check-in is closed"
+    ),
+
+    CHECKIN_NOT_OPEN(
+            8002,
+            HttpStatus.BAD_REQUEST,
+        "Check-in is not open yet"
+    ),
+
+    ALREADY_CHECKED_IN(
+            8003,
+            HttpStatus.CONFLICT,
+        "User already checked in"
+    ),
+
+    PAYMENT_NOT_FOUND(
+            9001,
+            HttpStatus.NOT_FOUND,
+            "Payment not found"
+
+    ),
+
+    PAYMENT_ALREADY_PAID(
+            9002,
+            HttpStatus.BAD_REQUEST,
+            "Registration has already been paid"
+
+    ),
+
+    PAYMENT_AMOUNT_MISMATCH(
+            9003,
+            HttpStatus.BAD_REQUEST,
+            "Payment amount mismatch"
+    ),
+
+    PAYMENT_CURRENCY_MISMATCH(
+            9004,
+            HttpStatus.BAD_REQUEST,
+            "Payment currency mismatch"
+    ),
+
+    PAYMENT_ACCESS_DENIED(
+            9005,
+            HttpStatus.FORBIDDEN,
+            "You do not have permission to access this payment"
+    ),
+
+    PAYMENT_INVALID_STATUS(
+            9006,
+            HttpStatus.BAD_REQUEST,
+            "Invalid payment status"
+    ),
+
+    PAYMENT_SIGNATURE_INVALID(
+            9007,
+            HttpStatus.BAD_REQUEST,
+            "Invalid SePay signature"
+    ),
+
+    PAYMENT_TRANSACTION_DUPLICATED(
+            9008,
+            HttpStatus.CONFLICT,
+            "Payment transaction already exists"
+    ),
+
+    PAYMENT_PROVIDER_ERROR(
+            9009,
+            HttpStatus.BAD_GATEWAY,
+            "Payment provider error"
+    ),
+
+    OTP_NOT_FOUND(
+            10001,
+            HttpStatus.NOT_FOUND,
+            "OTP not found"
+    ),
+    OTP_EXPIRE(
+            10002,
+            HttpStatus.BAD_REQUEST,
+            "OTP expired"
+    ),
+    OTP_MANY_ATTEMPTS(
+            10003,
+            HttpStatus.CONFLICT,
+            "Too many incorrect attempts. Please request a new OTP."
+    ),
+    OTP_INVALID(
+            10004,
+            HttpStatus.BAD_REQUEST,
+            "OTP invalid"
+    ),
+    OTP_ALREADY_EXIST(
+            10005,
+            HttpStatus.BAD_REQUEST,
+            "Email is already verified"
+    ),
+    OTP_RESEND(
+            10006,
+            HttpStatus.BAD_REQUEST,
+            "Please wait before requesting another OTP"
+    ),
+
+
+    ;
+
+    private final int code;
+    private final HttpStatus httpStatus;
+    private final String message;
+
+    ErrorCode(int code, HttpStatus httpStatus, String message) {
+        this.code = code;
+        this.httpStatus = httpStatus;
+        this.message = message;
+    }
+
+}

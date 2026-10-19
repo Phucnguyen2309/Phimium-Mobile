@@ -1,0 +1,32 @@
+package com.be.service;
+
+import com.be.dto.request.BuddyMatchingProfileRequest;
+import com.be.dto.request.UpgradeBuddyRequest;
+import com.be.dto.response.BuddyResponse;
+import com.be.entity.User;
+import com.be.enums.BuddyStatus;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.UUID;
+
+public interface BuddyService {
+
+    BuddyResponse upgradeBuddy(
+            UUID userId,
+            UpgradeBuddyRequest request,
+            MultipartFile image
+    ) throws IOException;
+
+    List<BuddyResponse> getAllBuddies(BuddyStatus status);
+
+    BuddyResponse updateMatchingProfile(UUID buddyId, BuddyMatchingProfileRequest request, User currentUser);
+
+    BuddyResponse getMatchingProfile(UUID buddyId, User currentUser);
+
+    BuddyResponse updateBuddyStatus(UUID buddyId, BuddyStatus status);
+
+    BuddyResponse updateMyStatus(User currentUser, BuddyStatus status);
+
+}
