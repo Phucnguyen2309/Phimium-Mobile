@@ -44,6 +44,7 @@ class AppStrings {
   static const String historyTour = 'History tour';
   static const String allTours = 'Tất cả';
   static const String itinerary = 'Lịch trình';
+  static const String guidelines = 'Cẩm nang & Quy tắc an toàn';
   static const String description = 'Giới thiệu';
   static const String reviews = 'Đánh giá';
   static const String departures = 'Lịch khởi hành';
@@ -58,15 +59,18 @@ class AppStrings {
   static const String children = 'Trẻ em';
   static const String pickupLocation = 'Điểm đón (không bắt buộc)';
   static const String couponCode = 'Mã giảm giá (không bắt buộc)';
+  static const String applyCoupon = 'Áp dụng';
   static const String safetyTerms = 'Tôi đồng ý với quy định an toàn của tour';
   static const String confirmBooking = 'Xác nhận đặt tour';
   static const String payNow = 'Thanh toán';
+  static const String checkIn = 'Check-in';
   static const String total = 'Tổng tiền';
 
   // Profile
   static const String myTrips = 'Chuyến đi của tôi';
   static const String myReviews = 'Đánh giá của tôi';
   static const String paymentHistory = 'Lịch sử thanh toán';
+  static const String buddyWorkspace = 'Không gian Buddy';
   static const String settings = 'Cài đặt';
   static const String logout = 'Đăng xuất';
 

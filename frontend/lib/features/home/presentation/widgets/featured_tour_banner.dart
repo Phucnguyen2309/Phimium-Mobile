@@ -56,11 +56,14 @@ class _FeaturedTourBannerState extends State<FeaturedTourBanner> {
               (i) => AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 margin: const EdgeInsets.symmetric(horizontal: 3),
-                width: i == _page ? 18 : 6,
+                width: i == _page ? 20 : 6,
                 height: 6,
                 decoration: BoxDecoration(
-                  color: i == _page ? AppColors.primary : AppColors.border,
+                  color: i == _page ? AppColors.secondary : AppColors.border,
                   borderRadius: BorderRadius.circular(3),
+                  border: i == _page
+                      ? Border.all(color: AppColors.primary, width: 0.8)
+                      : null,
                 ),
               ),
             ),
@@ -85,8 +88,13 @@ class _BannerItem extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            AppCachedImage(imageUrl: tour.thumbnailUrl, placeholderIcon: tour.type.icon),
-            const DecoratedBox(decoration: BoxDecoration(gradient: AppColors.imageOverlay)),
+            AppCachedImage(
+              imageUrl: tour.thumbnailUrl,
+              placeholderIcon: tour.type.icon,
+            ),
+            const DecoratedBox(
+              decoration: BoxDecoration(gradient: AppColors.imageOverlay),
+            ),
             Positioned(
               left: 16,
               right: 16,
@@ -106,28 +114,38 @@ class _BannerItem extends StatelessWidget {
                   Row(
                     children: [
                       if (tour.locationName != null) ...[
-                        const Icon(Icons.place_outlined, size: 14, color: Colors.white70),
-                        const SizedBox(width: 2),
+                        const Icon(
+                          Icons.place_outlined,
+                          size: 14,
+                          color: AppColors.secondary,
+                        ),
+                        const SizedBox(width: 3),
                         Flexible(
                           child: Text(
                             tour.locationName!,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: AppTextStyles.caption.copyWith(color: Colors.white70),
+                            style: AppTextStyles.caption.copyWith(
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 10),
                       ],
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
-                          color: AppColors.tertiary,
+                          color: AppColors.secondary,
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
                           '${Formatters.vnd(tour.price)}${AppStrings.perPerson}',
                           style: AppTextStyles.badgeText.copyWith(
-                            color: AppColors.textPrimary,
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w800,
                             fontSize: 11,
                           ),
                         ),

@@ -14,6 +14,10 @@ class Formatters {
   static String date(DateTime? value) =>
       value == null ? '--' : DateFormat('dd/MM/yyyy').format(value);
 
+  /// DateTime -> "18:30 20/11/2026"
+  static String dateTime(DateTime? value) =>
+      value == null ? '--' : DateFormat('HH:mm dd/MM/yyyy').format(value.toLocal());
+
   /// "08:30:00" -> "08:30"
   static String time(String? hhmmss) {
     if (hhmmss == null || hhmmss.length < 5) return hhmmss ?? '--';

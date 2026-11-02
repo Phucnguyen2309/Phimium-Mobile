@@ -4,7 +4,7 @@ import 'package:shimmer/shimmer.dart';
 
 import '../../core/theme/app_colors.dart';
 
-/// Ảnh mạng có cache + shimmer. Nếu không có URL thì hiện placeholder travel.
+/// Ảnh mạng có cache + shimmer. Nếu không có URL thì hiện nền Navy + icon nổi giống Web.
 class AppCachedImage extends StatelessWidget {
   final String? imageUrl;
   final double? width;
@@ -29,7 +29,31 @@ class AppCachedImage extends StatelessWidget {
       width: width,
       height: height,
       decoration: const BoxDecoration(gradient: AppColors.placeholderGradient),
-      child: Icon(placeholderIcon, color: AppColors.primary.withValues(alpha: 0.35), size: 36),
+      alignment: Alignment.center,
+      child: Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.95),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: AppColors.secondary.withValues(alpha: 0.6),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.2),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Icon(
+          placeholderIcon,
+          color: AppColors.primary,
+          size: 26,
+        ),
+      ),
     );
 
     final url = imageUrl;
@@ -45,7 +69,11 @@ class AppCachedImage extends StatelessWidget {
               placeholder: (context, _) => Shimmer.fromColors(
                 baseColor: AppColors.surfaceLight,
                 highlightColor: AppColors.surface,
-                child: Container(width: width, height: height, color: AppColors.surfaceLight),
+                child: Container(
+                  width: width,
+                  height: height,
+                  color: AppColors.surfaceLight,
+                ),
               ),
               errorWidget: (context, _, __) => placeholder,
             ),

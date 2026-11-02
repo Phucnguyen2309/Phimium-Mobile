@@ -44,6 +44,8 @@ class Booking extends Equatable {
   final double? totalAmount;
   final String? buddyName;
   final DateTime? paymentExpiresAt;
+  final String? checkInStatus;
+  final DateTime? checkedInAt;
 
   const Booking({
     required this.id,
@@ -60,13 +62,41 @@ class Booking extends Equatable {
     this.totalAmount,
     this.buddyName,
     this.paymentExpiresAt,
+    this.checkInStatus,
+    this.checkedInAt,
   });
 
   bool get canPay => status == 'PENDING_PAYMENT' || status == 'BUDDY_ASSIGNED';
   bool get canReview => status == 'COMPLETED';
+  bool get isCheckedIn => checkInStatus == 'CHECKED_IN' || checkedInAt != null;
+  bool get canCheckIn => status == 'CONFIRMED' && !isCheckedIn;
 
   @override
-  List<Object?> get props => [id, status];
+  List<Object?> get props => [id, status, checkInStatus];
+}
+
+/// Báo giá tạm tính & áp mã giảm giá (PriceQuoteResponse)
+class PriceQuote extends Equatable {
+  final double? adultUnitPrice;
+  final double? childUnitPrice;
+  final double? subtotal;
+  final double? discountAmount;
+  final double? totalAmount;
+  final String? appliedCouponCode;
+  final String? message;
+
+  const PriceQuote({
+    this.adultUnitPrice,
+    this.childUnitPrice,
+    this.subtotal,
+    this.discountAmount,
+    this.totalAmount,
+    this.appliedCouponCode,
+    this.message,
+  });
+
+  @override
+  List<Object?> get props => [subtotal, discountAmount, totalAmount, appliedCouponCode];
 }
 
 /// Thông tin thanh toán (CreatePaymentResponse)
@@ -89,4 +119,34 @@ class PaymentCheckout extends Equatable {
 
   @override
   List<Object?> get props => [paymentId];
+}
+
+/// Lịch sử / Chi tiết giao dịch thanh toán (PaymentResponse)
+class PaymentRecord extends Equatable {
+  final String id;
+  final String? registrationId;
+  final String? invoiceNumber;
+  final double? amount;
+  final String? status;
+  final String? paymentMethod;
+  final String? sepayOrderId;
+  final String? sepayTransactionId;
+  final DateTime? paidAt;
+  final DateTime? createdAt;
+
+  const PaymentRecord({
+    required this.id,
+    this.registrationId,
+    this.invoiceNumber,
+    this.amount,
+    this.status,
+    this.paymentMethod,
+    this.sepayOrderId,
+    this.sepayTransactionId,
+    this.paidAt,
+    this.createdAt,
+  });
+
+  @override
+  List<Object?> get props => [id, status];
 }

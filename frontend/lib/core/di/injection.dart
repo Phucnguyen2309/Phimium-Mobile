@@ -9,6 +9,9 @@ import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/booking/data/datasources/booking_remote_datasource.dart';
 import '../../features/booking/data/repositories/booking_repository_impl.dart';
 import '../../features/booking/domain/repositories/booking_repository.dart';
+import '../../features/buddy/data/datasources/buddy_remote_datasource.dart';
+import '../../features/buddy/data/repositories/buddy_repository_impl.dart';
+import '../../features/buddy/domain/repositories/buddy_repository.dart';
 import '../../features/review/data/repositories/review_repository_impl.dart';
 import '../../features/review/domain/repositories/review_repository.dart';
 import '../../features/tour/data/datasources/tour_remote_datasource.dart';
@@ -48,6 +51,10 @@ Future<void> configureDependencies() async {
   // ===== Booking & Payment =====
   getIt.registerLazySingleton(() => BookingRemoteDataSource(getIt()));
   getIt.registerLazySingleton<BookingRepository>(() => BookingRepositoryImpl(getIt()));
+
+  // ===== Buddy =====
+  getIt.registerLazySingleton(() => BuddyRemoteDataSource(getIt()));
+  getIt.registerLazySingleton<BuddyRepository>(() => BuddyRepositoryImpl(getIt()));
 
   // ===== Review =====
   getIt.registerLazySingleton<ReviewRepository>(() => ReviewRepositoryImpl(getIt()));

@@ -27,8 +27,21 @@ class BookingModel {
       totalAmount: Formatters.toDouble(j['totalAmount']),
       buddyName: buddy?['name']?.toString(),
       paymentExpiresAt: Formatters.toDate(j['paymentExpiresAt']),
+      checkInStatus: j['checkInStatus']?.toString(),
+      checkedInAt: Formatters.toDate(j['checkedInAt']),
     );
   }
+
+  /// PriceQuoteResponse
+  static PriceQuote quoteFromJson(Map<String, dynamic> j) => PriceQuote(
+        adultUnitPrice: Formatters.toDouble(j['adultUnitPrice']),
+        childUnitPrice: Formatters.toDouble(j['childUnitPrice']),
+        subtotal: Formatters.toDouble(j['subtotal']),
+        discountAmount: Formatters.toDouble(j['discountAmount']),
+        totalAmount: Formatters.toDouble(j['totalAmount']),
+        appliedCouponCode: j['appliedCouponCode']?.toString(),
+        message: j['message']?.toString(),
+      );
 
   /// CreatePaymentResponse
   static PaymentCheckout paymentFromJson(Map<String, dynamic> j) => PaymentCheckout(
@@ -40,5 +53,19 @@ class BookingModel {
         fields: j['fields'] is Map
             ? (j['fields'] as Map).map((k, v) => MapEntry(k.toString(), v.toString()))
             : const {},
+      );
+
+  /// PaymentResponse
+  static PaymentRecord paymentRecordFromJson(Map<String, dynamic> j) => PaymentRecord(
+        id: (j['id'] ?? j['paymentId'] ?? '').toString(),
+        registrationId: j['registrationId']?.toString(),
+        invoiceNumber: j['invoiceNumber']?.toString(),
+        amount: Formatters.toDouble(j['amount']),
+        status: j['status']?.toString(),
+        paymentMethod: j['paymentMethod']?.toString(),
+        sepayOrderId: j['sepayOrderId']?.toString(),
+        sepayTransactionId: j['sepayTransactionId']?.toString(),
+        paidAt: Formatters.toDate(j['paidAt']),
+        createdAt: Formatters.toDate(j['createdAt']),
       );
 }

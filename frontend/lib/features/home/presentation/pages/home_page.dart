@@ -10,7 +10,6 @@ import '../../../../shared/widgets/state_widgets.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../tour/domain/entities/tour.dart';
 import '../../../tour/domain/repositories/tour_repository.dart';
-import '../widgets/buddy_match_card.dart';
 import '../widgets/departing_soon_section.dart';
 import '../widgets/featured_tour_banner.dart';
 import '../widgets/home_top_bar.dart';
@@ -72,7 +71,8 @@ class _HomePageState extends State<HomePage> {
                 slivers.add(SliverFillRemaining(
                   hasScrollBody: false,
                   child: ErrorStateWidget(
-                    message: 'Không tải được danh sách tour.\nKiểm tra BE đang chạy và API_BASE_URL.',
+                    message:
+                        'Không tải được danh sách tour.\nKiểm tra BE đang chạy và API_BASE_URL.',
                     onRetry: _refresh,
                   ),
                 ));
@@ -113,7 +113,9 @@ class _HomePageState extends State<HomePage> {
     final history = tours.where((t) => t.type == TourType.history).toList();
 
     return [
-      SliverToBoxAdapter(child: FeaturedTourBanner(tours: tours.take(5).toList())),
+      SliverToBoxAdapter(
+        child: FeaturedTourBanner(tours: tours.take(5).toList()),
+      ),
       SliverToBoxAdapter(
         child: BlocBuilder<AuthBloc, AuthState>(
           builder: (context, state) => state is AuthAuthenticated
@@ -124,18 +126,15 @@ class _HomePageState extends State<HomePage> {
               : const SizedBox.shrink(),
         ),
       ),
-      const SliverToBoxAdapter(
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 16),
-          child: BuddyMatchCard(),
-        ),
-      ),
       SliverToBoxAdapter(
-        child: HorizontalTourRow(
-          title: AppStrings.foodTours,
-          icon: Icons.ramen_dining_rounded,
-          tours: food,
-          onSeeAll: () => context.go('${AppRouter.explore}?type=food'),
+        child: Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: HorizontalTourRow(
+            title: AppStrings.foodTours,
+            icon: Icons.ramen_dining_rounded,
+            tours: food,
+            onSeeAll: () => context.go('${AppRouter.explore}?type=food'),
+          ),
         ),
       ),
       SliverToBoxAdapter(

@@ -6,6 +6,7 @@ import '../../../../core/network/api_result.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/widgets/app_feedback.dart';
 import '../../domain/repositories/review_repository.dart';
 
 /// Viết đánh giá sau chuyến đi (POST /api/feedback/registrations/{id})
@@ -43,12 +44,15 @@ class _WriteReviewPageState extends State<WriteReviewPage> {
         buddyComment: _buddyComment.text.trim(),
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Cảm ơn bạn đã đánh giá!')));
+      AppFeedback.success(
+        context,
+        'Cảm ơn bạn đã chia sẻ đánh giá sau chuyến đi!',
+        title: 'Đã gửi đánh giá',
+      );
       context.pop(true);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(readableError(e))));
+      AppFeedback.error(context, readableError(e));
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -57,24 +61,61 @@ class _WriteReviewPageState extends State<WriteReviewPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('Đánh giá chuyến đi')),
       body: ListView(
         padding: const EdgeInsets.all(AppDimens.lg),
         children: [
-          Text('Chuyến đi', style: AppTextStyles.heading3),
-          _StarPicker(value: _tourRating, onChanged: (v) => setState(() => _tourRating = v)),
-          TextField(
-            controller: _tourComment,
-            maxLines: 3,
-            decoration: const InputDecoration(hintText: 'Cảm nhận về tour...'),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Trải nghiệm chuyến đi', style: AppTextStyles.heading3),
+                _StarPicker(
+                  value: _tourRating,
+                  onChanged: (v) => setState(() => _tourRating = v),
+                ),
+                TextField(
+                  controller: _tourComment,
+                  maxLines: 3,
+                  decoration: const InputDecoration(
+                    hintText: 'Chia sẻ cảm nhận về lịch trình, điểm đến...',
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: AppDimens.xl),
-          Text('Buddy', style: AppTextStyles.heading3),
-          _StarPicker(value: _buddyRating, onChanged: (v) => setState(() => _buddyRating = v)),
-          TextField(
-            controller: _buddyComment,
-            maxLines: 3,
-            decoration: const InputDecoration(hintText: 'Nhận xét về Buddy...'),
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Đồng hành cùng Buddy', style: AppTextStyles.heading3),
+                _StarPicker(
+                  value: _buddyRating,
+                  onChanged: (v) => setState(() => _buddyRating = v),
+                ),
+                TextField(
+                  controller: _buddyComment,
+                  maxLines: 3,
+                  decoration: const InputDecoration(
+                    hintText: 'Nhận xét về sự nhiệt tình, am hiểu của Buddy...',
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: AppDimens.xl),
           ElevatedButton(
@@ -83,7 +124,10 @@ class _WriteReviewPageState extends State<WriteReviewPage> {
                 ? const SizedBox(
                     width: 22,
                     height: 22,
-                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.4),
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2.4,
+                    ),
                   )
                 : const Text('Gửi đánh giá'),
           ),
