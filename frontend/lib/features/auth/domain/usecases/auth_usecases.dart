@@ -4,7 +4,6 @@ import '../repositories/auth_repository.dart';
 
 class LoginUseCase {
   final AuthRepository repository;
-
   LoginUseCase(this.repository);
 
   Future<ApiResult<User>> call({
@@ -12,40 +11,55 @@ class LoginUseCase {
     required String password,
   }) async {
     try {
-      final user = await repository.login(email: email, password: password);
-      return ApiSuccess(user);
+      return ApiSuccess(await repository.login(email: email, password: password));
     } catch (e) {
-      return ApiError(e.toString());
+      return ApiError(readableError(e));
     }
   }
 }
 
 class RegisterUseCase {
   final AuthRepository repository;
-
   RegisterUseCase(this.repository);
 
-  Future<ApiResult<User>> call({
+  Future<ApiResult<void>> call({
     required String email,
     required String password,
     required String fullName,
+    required DateTime birthday,
+    required String phone,
   }) async {
     try {
-      final user = await repository.register(
+      await repository.register(
         email: email,
         password: password,
         fullName: fullName,
+        birthday: birthday,
+        phone: phone,
       );
-      return ApiSuccess(user);
+      return const ApiSuccess(null);
     } catch (e) {
-      return ApiError(e.toString());
+      return ApiError(readableError(e));
+    }
+  }
+}
+
+class VerifyOtpUseCase {
+  final AuthRepository repository;
+  VerifyOtpUseCase(this.repository);
+
+  Future<ApiResult<void>> call({required String email, required String otp}) async {
+    try {
+      await repository.verifyOtp(email: email, otp: otp);
+      return const ApiSuccess(null);
+    } catch (e) {
+      return ApiError(readableError(e));
     }
   }
 }
 
 class LogoutUseCase {
   final AuthRepository repository;
-
   LogoutUseCase(this.repository);
 
   Future<ApiResult<void>> call() async {
@@ -53,26 +67,23 @@ class LogoutUseCase {
       await repository.logout();
       return const ApiSuccess(null);
     } catch (e) {
-      return ApiError(e.toString());
+      return ApiError(readableError(e));
     }
   }
 }
 
 class CheckAuthUseCase {
   final AuthRepository repository;
-
   CheckAuthUseCase(this.repository);
 
   Future<ApiResult<User?>> call() async {
     try {
-      final isLoggedIn = await repository.isLoggedIn();
-      if (isLoggedIn) {
-        final user = await repository.getCurrentUser();
-        return ApiSuccess(user);
+      if (await repository.isLoggedIn()) {
+        return ApiSuccess(await repository.getCurrentUser());
       }
       return const ApiSuccess(null);
     } catch (e) {
-      return ApiError(e.toString());
+      return ApiError(readableError(e));
     }
   }
 }

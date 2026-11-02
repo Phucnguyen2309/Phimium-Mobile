@@ -1,109 +1,72 @@
-import 'package:json_annotation/json_annotation.dart';
-
 import '../../domain/entities/user.dart';
 
-part 'user_model.g.dart';
-
-@JsonSerializable()
+/// UserModel - parse từ MeResponse của BE:
+/// { userId, username, fullName, role, buddyId }
 class UserModel {
   final String id;
   final String email;
-  @JsonKey(name: 'full_name')
   final String fullName;
-  @JsonKey(name: 'avatar_url')
-  final String? avatarUrl;
-  @JsonKey(name: 'coin_balance', defaultValue: 0)
-  final int coinBalance;
-  final String? phone;
-  @JsonKey(name: 'created_at')
-  final String? createdAt;
+  final String role;
+  final String? buddyId;
 
   const UserModel({
     required this.id,
     required this.email,
     required this.fullName,
-    this.avatarUrl,
-    this.coinBalance = 0,
-    this.phone,
-    this.createdAt,
+    this.role = 'USER',
+    this.buddyId,
   });
 
-  factory UserModel.fromJson(Map<String, dynamic> json) =>
-      _$UserModelFromJson(json);
+  factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
+        id: (json['userId'] ?? json['id'] ?? '').toString(),
+        email: (json['username'] ?? json['email'] ?? '').toString(),
+        fullName: (json['fullName'] ?? '').toString(),
+        role: (json['role'] ?? 'USER').toString(),
+        buddyId: json['buddyId']?.toString(),
+      );
 
-  Map<String, dynamic> toJson() => _$UserModelToJson(this);
+  Map<String, dynamic> toJson() => {
+        'userId': id,
+        'username': email,
+        'fullName': fullName,
+        'role': role,
+        'buddyId': buddyId,
+      };
 
-  /// Convert to domain entity
   User toEntity() => User(
         id: id,
         email: email,
         fullName: fullName,
-        avatarUrl: avatarUrl,
-        coinBalance: coinBalance,
-        phone: phone,
-        createdAt: createdAt != null ? DateTime.tryParse(createdAt!) : null,
-      );
-
-  /// Create from domain entity
-  factory UserModel.fromEntity(User user) => UserModel(
-        id: user.id,
-        email: user.email,
-        fullName: user.fullName,
-        avatarUrl: user.avatarUrl,
-        coinBalance: user.coinBalance,
-        phone: user.phone,
-        createdAt: user.createdAt?.toIso8601String(),
+        role: role,
+        buddyId: buddyId,
       );
 }
 
-@JsonSerializable()
-class AuthResponse {
-  @JsonKey(name: 'access_token')
+/// LoginResponse của BE:
+/// { username, fullName, accessToken, refreshToken, buddyId, role }
+class AuthSession {
   final String accessToken;
-  @JsonKey(name: 'refresh_token')
   final String refreshToken;
-  final UserModel user;
+  final String email;
+  final String fullName;
+  final String role;
+  final String? buddyId;
 
-  const AuthResponse({
+  const AuthSession({
     required this.accessToken,
     required this.refreshToken,
-    required this.user,
-  });
-
-  factory AuthResponse.fromJson(Map<String, dynamic> json) =>
-      _$AuthResponseFromJson(json);
-
-  Map<String, dynamic> toJson() => _$AuthResponseToJson(this);
-}
-
-@JsonSerializable()
-class LoginRequest {
-  final String email;
-  final String password;
-
-  const LoginRequest({required this.email, required this.password});
-
-  factory LoginRequest.fromJson(Map<String, dynamic> json) =>
-      _$LoginRequestFromJson(json);
-
-  Map<String, dynamic> toJson() => _$LoginRequestToJson(this);
-}
-
-@JsonSerializable()
-class RegisterRequest {
-  final String email;
-  final String password;
-  @JsonKey(name: 'full_name')
-  final String fullName;
-
-  const RegisterRequest({
     required this.email,
-    required this.password,
     required this.fullName,
+    required this.role,
+    this.buddyId,
   });
 
-  factory RegisterRequest.fromJson(Map<String, dynamic> json) =>
-      _$RegisterRequestFromJson(json);
-
-  Map<String, dynamic> toJson() => _$RegisterRequestToJson(this);
+  factory AuthSession.fromJson(Map<String, dynamic> json) => AuthSession(
+        accessToken: (json['accessToken'] ?? '').toString(),
+        refreshToken: (json['refreshToken'] ?? '').toString(),
+        email: (json['username'] ?? '').toString(),
+        fullName: (json['fullName'] ?? '').toString(),
+        role: (json['role'] ?? 'USER').toString(),
+        buddyId: json['buddyId']?.toString(),
+      );
 }

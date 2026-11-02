@@ -1,16 +1,17 @@
-import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../../core/theme/app_colors.dart';
 
-/// Cached network image with shimmer loading effect
+/// Ảnh mạng có cache + shimmer. Nếu không có URL thì hiện placeholder travel.
 class AppCachedImage extends StatelessWidget {
-  final String imageUrl;
+  final String? imageUrl;
   final double? width;
   final double? height;
   final BoxFit fit;
   final BorderRadius? borderRadius;
+  final IconData placeholderIcon;
 
   const AppCachedImage({
     super.key,
@@ -19,33 +20,35 @@ class AppCachedImage extends StatelessWidget {
     this.height,
     this.fit = BoxFit.cover,
     this.borderRadius,
+    this.placeholderIcon = Icons.landscape_rounded,
   });
 
   @override
   Widget build(BuildContext context) {
+    final placeholder = Container(
+      width: width,
+      height: height,
+      decoration: const BoxDecoration(gradient: AppColors.placeholderGradient),
+      child: Icon(placeholderIcon, color: AppColors.primary.withValues(alpha: 0.35), size: 36),
+    );
+
+    final url = imageUrl;
     return ClipRRect(
       borderRadius: borderRadius ?? BorderRadius.zero,
-      child: CachedNetworkImage(
-        imageUrl: imageUrl,
-        width: width,
-        height: height,
-        fit: fit,
-        placeholder: (context, url) => Shimmer.fromColors(
-          baseColor: AppColors.surface,
-          highlightColor: AppColors.surfaceLight,
-          child: Container(
-            width: width,
-            height: height,
-            color: AppColors.surface,
-          ),
-        ),
-        errorWidget: (context, url, error) => Container(
-          width: width,
-          height: height,
-          color: AppColors.surface,
-          child: const Icon(Icons.broken_image_outlined, color: AppColors.textHint),
-        ),
-      ),
+      child: (url == null || url.isEmpty)
+          ? placeholder
+          : CachedNetworkImage(
+              imageUrl: url,
+              width: width,
+              height: height,
+              fit: fit,
+              placeholder: (context, _) => Shimmer.fromColors(
+                baseColor: AppColors.surfaceLight,
+                highlightColor: AppColors.surface,
+                child: Container(width: width, height: height, color: AppColors.surfaceLight),
+              ),
+              errorWidget: (context, _, __) => placeholder,
+            ),
     );
   }
 }

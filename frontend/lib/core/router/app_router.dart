@@ -2,117 +2,104 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
+import '../../features/auth/presentation/pages/verify_otp_page.dart';
+import '../../features/booking/presentation/pages/booking_page.dart';
+import '../../features/booking/presentation/pages/my_bookings_page.dart';
+import '../../features/explore/presentation/pages/explore_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
-import '../../features/search/presentation/pages/search_page.dart';
-import '../../features/bookmark/presentation/pages/bookmark_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
-import '../../features/drama/presentation/pages/drama_detail_page.dart';
-import '../../features/drama/presentation/pages/video_player_page.dart';
-import '../../features/payment/presentation/pages/payment_page.dart';
-import '../../features/comment/presentation/pages/comment_page.dart';
+import '../../features/review/presentation/pages/my_reviews_page.dart';
+import '../../features/review/presentation/pages/review_page.dart';
+import '../../features/review/presentation/pages/write_review_page.dart';
+import '../../features/tour/presentation/pages/tour_detail_page.dart';
+import '../../features/tour/presentation/pages/tour_itinerary_page.dart';
+import '../../features/wishlist/presentation/pages/wishlist_page.dart';
 import 'app_shell.dart';
 
-/// App Router using GoRouter with nested navigation
+/// App Router (GoRouter)
 class AppRouter {
   AppRouter._();
 
   // Route paths
-  static const String splash = '/';
   static const String login = '/login';
   static const String register = '/register';
+  static const String verifyOtp = '/verify-otp';
   static const String home = '/home';
-  static const String search = '/search';
-  static const String bookmarks = '/bookmarks';
+  static const String explore = '/explore';
+  static const String wishlist = '/wishlist';
   static const String profile = '/profile';
-  static const String dramaDetail = '/drama/:id';
-  static const String videoPlayer = '/drama/:id/episode/:episodeId';
-  static const String payment = '/payment';
-  static const String comments = '/drama/:id/comments';
+  static const String tourDetail = '/tour/:id';
+  static const String tourItinerary = '/tour/:id/itinerary';
+  static const String booking = '/tour/:id/book';
+  static const String buddyReviews = '/buddy/:buddyId/reviews';
+  static const String myBookings = '/bookings';
+  static const String writeReview = '/bookings/:id/review';
+  static const String myReviews = '/my-reviews';
 
   static final GoRouter router = GoRouter(
     initialLocation: home,
-    debugLogDiagnostics: true,
     routes: [
-      // Auth routes
+      // Auth
+      GoRoute(path: login, builder: (context, state) => const LoginPage()),
+      GoRoute(path: register, builder: (context, state) => const RegisterPage()),
       GoRoute(
-        path: login,
-        name: 'login',
-        builder: (context, state) => const LoginPage(),
-      ),
-      GoRoute(
-        path: register,
-        name: 'register',
-        builder: (context, state) => const RegisterPage(),
+        path: verifyOtp,
+        builder: (context, state) =>
+            VerifyOtpPage(email: state.uri.queryParameters['email'] ?? ''),
       ),
 
-      // Main shell with bottom navigation
+      // Main shell với bottom navigation
       ShellRoute(
         builder: (context, state, child) => AppShell(child: child),
         routes: [
           GoRoute(
             path: home,
-            name: 'home',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: HomePage(),
+            pageBuilder: (context, state) => const NoTransitionPage(child: HomePage()),
+          ),
+          GoRoute(
+            path: explore,
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: ExplorePage(initialType: state.uri.queryParameters['type']),
             ),
           ),
           GoRoute(
-            path: search,
-            name: 'search',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: SearchPage(),
-            ),
-          ),
-          GoRoute(
-            path: bookmarks,
-            name: 'bookmarks',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: BookmarkPage(),
-            ),
+            path: wishlist,
+            pageBuilder: (context, state) => const NoTransitionPage(child: WishlistPage()),
           ),
           GoRoute(
             path: profile,
-            name: 'profile',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: ProfilePage(),
-            ),
+            pageBuilder: (context, state) => const NoTransitionPage(child: ProfilePage()),
           ),
         ],
       ),
 
-      // Detail routes (outside shell - full screen)
+      // Tour (full screen)
       GoRoute(
-        path: dramaDetail,
-        name: 'dramaDetail',
-        builder: (context, state) {
-          final id = state.pathParameters['id']!;
-          return DramaDetailPage(dramaId: id);
-        },
+        path: tourDetail,
+        builder: (context, state) => TourDetailPage(tourId: state.pathParameters['id']!),
       ),
       GoRoute(
-        path: videoPlayer,
-        name: 'videoPlayer',
-        builder: (context, state) {
-          final dramaId = state.pathParameters['id']!;
-          final episodeId = state.pathParameters['episodeId']!;
-          return VideoPlayerPage(
-            dramaId: dramaId,
-            episodeId: episodeId,
-          );
-        },
+        path: tourItinerary,
+        builder: (context, state) => TourItineraryPage(tourId: state.pathParameters['id']!),
       ),
       GoRoute(
-        path: payment,
-        name: 'payment',
-        builder: (context, state) => const PaymentPage(),
+        path: booking,
+        builder: (context, state) => BookingPage(tourId: state.pathParameters['id']!),
       ),
+
+      // Booking & Review
+      GoRoute(path: myBookings, builder: (context, state) => const MyBookingsPage()),
       GoRoute(
-        path: comments,
-        name: 'comments',
-        builder: (context, state) {
-          final dramaId = state.pathParameters['id']!;
-          return CommentPage(dramaId: dramaId);
-        },
+        path: writeReview,
+        builder: (context, state) => WriteReviewPage(bookingId: state.pathParameters['id']!),
+      ),
+      GoRoute(path: myReviews, builder: (context, state) => const MyReviewsPage()),
+      GoRoute(
+        path: buddyReviews,
+        builder: (context, state) => ReviewPage(
+          buddyId: state.pathParameters['buddyId']!,
+          buddyName: state.uri.queryParameters['name'],
+        ),
       ),
     ],
   );

@@ -1,15 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/app_strings.dart';
+import '../../../../core/di/injection.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../widgets/category_chips_bar.dart';
-import '../widgets/continue_watching_section.dart';
-import '../widgets/daily_coins_card.dart';
-import '../widgets/featured_hero_banner.dart';
+import '../../../../shared/widgets/state_widgets.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../tour/domain/entities/tour.dart';
+import '../../../tour/domain/repositories/tour_repository.dart';
+import '../widgets/buddy_match_card.dart';
+import '../widgets/departing_soon_section.dart';
+import '../widgets/featured_tour_banner.dart';
 import '../widgets/home_top_bar.dart';
-import '../widgets/horizontal_drama_row.dart';
-import '../widgets/top_ranked_section.dart';
+import '../widgets/horizontal_tour_row.dart';
+import '../widgets/tour_type_chips_bar.dart';
+import '../widgets/upcoming_trips_section.dart';
 
-/// Home Page - Main feed matching CineShorts design specification
+/// Trang chủ Phimium - toàn bộ dữ liệu lấy từ BE (GET /api/activity/getAll)
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -18,170 +27,134 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int _selectedCategoryIndex = 0;
+  TourType? _selectedType;
+  late Future<List<Tour>> _future;
 
-  static const List<Map<String, dynamic>> _billionaireSeries = [
-    {
-      'id': '201',
-      'title': "Cold CEO's Secret Wife",
-      'episodes': '88 Eps',
-      'rating': '4.9',
-      'views': '3.4M',
-      'gradient': [Color(0xFF2B1C22), Color(0xFF130E14)],
-      'icon': Icons.business_rounded,
-    },
-    {
-      'id': '202',
-      'title': "The Tycoon's Double Life",
-      'episodes': '65 Eps',
-      'rating': '4.8',
-      'views': '2.1M',
-      'gradient': [Color(0xFF162534), Color(0xFF0F1822)],
-      'icon': Icons.diamond_rounded,
-    },
-    {
-      'id': '203',
-      'title': 'Forbidden Love with CEO',
-      'episodes': '78 Eps',
-      'rating': '4.9',
-      'views': '4.8M',
-      'gradient': [Color(0xFF261933), Color(0xFF15101E)],
-      'icon': Icons.favorite_rounded,
-    },
-    {
-      'id': '204',
-      'title': 'The Secret Heir’s Payback',
-      'episodes': '82 Eps',
-      'rating': '4.7',
-      'views': '1.9M',
-      'gradient': [Color(0xFF332014), Color(0xFF1B1109)],
-      'icon': Icons.military_tech_rounded,
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _future = getIt<TourRepository>().getTours();
+  }
 
-  static const List<Map<String, dynamic>> _werewolfSeries = [
-    {
-      'id': '301',
-      'title': "Alpha King's Untamed Mate",
-      'episodes': '90 Eps',
-      'rating': '4.9',
-      'views': '5.2M',
-      'gradient': [Color(0xFF351221), Color(0xFF1C0A12)],
-      'icon': Icons.nightlight_round,
-    },
-    {
-      'id': '302',
-      'title': "Shadow Wolf's Destiny",
-      'episodes': '74 Eps',
-      'rating': '4.8',
-      'views': '3.1M',
-      'gradient': [Color(0xFF1A1F36), Color(0xFF0F1222)],
-      'icon': Icons.pets_rounded,
-    },
-    {
-      'id': '303',
-      'title': 'The Luna’s Second Chance',
-      'episodes': '85 Eps',
-      'rating': '4.9',
-      'views': '2.8M',
-      'gradient': [Color(0xFF2B1D38), Color(0xFF170F20)],
-      'icon': Icons.auto_awesome_rounded,
-    },
-  ];
+  Future<void> _refresh() async {
+    final future = getIt<TourRepository>().getTours(forceRefresh: true);
+    setState(() => _future = future);
+    await future.catchError((_) => <Tour>[]);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
       body: SafeArea(
         bottom: false,
         child: RefreshIndicator(
           color: AppColors.primary,
-          backgroundColor: AppColors.surfaceLight,
-          onRefresh: () async {
-            await Future.delayed(const Duration(milliseconds: 600));
-          },
-          child: CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              // Sticky / Top Bar
-              const SliverToBoxAdapter(
-                child: HomeTopBar(),
-              ),
-
-              // Category Pills Bar
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 4, bottom: 6),
-                  child: CategoryChipsBar(
-                    selectedIndex: _selectedCategoryIndex,
-                    onCategorySelected: (index) {
-                      setState(() {
-                        _selectedCategoryIndex = index;
-                      });
-                    },
+          onRefresh: _refresh,
+          child: FutureBuilder<List<Tour>>(
+            future: _future,
+            builder: (context, snapshot) {
+              final slivers = <Widget>[
+                const SliverToBoxAdapter(child: HomeTopBar()),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: TourTypeChipsBar(
+                      selected: _selectedType,
+                      onChanged: (t) => setState(() => _selectedType = t),
+                    ),
                   ),
                 ),
-              ),
+              ];
 
-              // Hero Featured Drama Banner
-              const SliverToBoxAdapter(
-                child: FeaturedHeroBanner(),
-              ),
-
-              // Continue Watching Section
-              const SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.only(top: 8),
-                  child: ContinueWatchingSection(),
-                ),
-              ),
-
-              // Top 10 Binge-Worthy Section
-              const SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.only(top: 12),
-                  child: TopRankedSection(),
-                ),
-              ),
-
-              // Claim Daily Free Coins CTA Card
-              const SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8),
-                  child: DailyCoinsCard(),
-                ),
-              ),
-
-              // Billionaire & CEO Series Section
-              SliverToBoxAdapter(
-                child: HorizontalDramaRow(
-                  title: 'Billionaire & CEO Series',
-                  icon: Icons.workspace_premium_rounded,
-                  items: _billionaireSeries,
-                ),
-              ),
-
-              // Werewolf & Romance Section
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 12),
-                  child: HorizontalDramaRow(
-                    title: 'Werewolf & Fantasy Drama',
-                    icon: Icons.auto_awesome_rounded,
-                    items: _werewolfSeries,
+              if (snapshot.connectionState != ConnectionState.done) {
+                slivers.add(const SliverFillRemaining(child: LoadingWidget()));
+              } else if (snapshot.hasError) {
+                slivers.add(SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: ErrorStateWidget(
+                    message: 'Không tải được danh sách tour.\nKiểm tra BE đang chạy và API_BASE_URL.',
+                    onRetry: _refresh,
                   ),
-                ),
-              ),
+                ));
+              } else {
+                slivers.addAll(_buildContent(snapshot.data ?? const []));
+              }
 
-              // Bottom Spacing for BottomNavigationBar
-              const SliverToBoxAdapter(
-                child: SizedBox(height: 32),
-              ),
-            ],
+              slivers.add(const SliverToBoxAdapter(child: SizedBox(height: 32)));
+              return CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: slivers,
+              );
+            },
           ),
         ),
       ),
     );
+  }
+
+  List<Widget> _buildContent(List<Tour> all) {
+    final tours = _selectedType == null
+        ? all
+        : all.where((t) => t.type == _selectedType).toList();
+
+    if (tours.isEmpty) {
+      return const [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: EmptyStateWidget(
+            message: 'Chưa có tour nào. Hãy thêm tour ở trang Admin của BE.',
+            icon: Icons.travel_explore_rounded,
+          ),
+        ),
+      ];
+    }
+
+    final food = tours.where((t) => t.type == TourType.food).toList();
+    final history = tours.where((t) => t.type == TourType.history).toList();
+
+    return [
+      SliverToBoxAdapter(child: FeaturedTourBanner(tours: tours.take(5).toList())),
+      SliverToBoxAdapter(
+        child: BlocBuilder<AuthBloc, AuthState>(
+          builder: (context, state) => state is AuthAuthenticated
+              ? Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: UpcomingTripsSection(key: ValueKey(state.user.id)),
+                )
+              : const SizedBox.shrink(),
+        ),
+      ),
+      const SliverToBoxAdapter(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 16),
+          child: BuddyMatchCard(),
+        ),
+      ),
+      SliverToBoxAdapter(
+        child: HorizontalTourRow(
+          title: AppStrings.foodTours,
+          icon: Icons.ramen_dining_rounded,
+          tours: food,
+          onSeeAll: () => context.go('${AppRouter.explore}?type=food'),
+        ),
+      ),
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: HorizontalTourRow(
+            title: AppStrings.historyTours,
+            icon: Icons.account_balance_rounded,
+            tours: history,
+            onSeeAll: () => context.go('${AppRouter.explore}?type=history'),
+          ),
+        ),
+      ),
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: DepartingSoonSection(tours: tours),
+        ),
+      ),
+    ];
   }
 }

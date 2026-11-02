@@ -3,113 +3,59 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'app_colors.dart';
 
-/// App-wide typography presets using Plus Jakarta Sans
-/// Consistent with the "Midnight Crimson & Gold Stream" design system
+/// Typography Phimium Travel - Be Vietnam Pro (hỗ trợ tiếng Việt tốt)
 class AppTextStyles {
   AppTextStyles._();
 
+  static TextStyle _base({
+    required double size,
+    required FontWeight weight,
+    Color color = AppColors.textPrimary,
+    double? height,
+    double? letterSpacing,
+  }) =>
+      GoogleFonts.beVietnamPro(
+        fontSize: size,
+        fontWeight: weight,
+        color: color,
+        height: height,
+        letterSpacing: letterSpacing,
+      );
+
   // Headings
-  static TextStyle get heroTitle => GoogleFonts.plusJakartaSans(
-        fontSize: 22,
-        fontWeight: FontWeight.w800,
-        color: AppColors.textPrimary,
-        height: 1.2,
-      );
-
-  static TextStyle get heading1 => GoogleFonts.plusJakartaSans(
-        fontSize: 28,
-        fontWeight: FontWeight.w800,
-        color: AppColors.textPrimary,
-        letterSpacing: -0.5,
-      );
-
-  static TextStyle get heading2 => GoogleFonts.plusJakartaSans(
-        fontSize: 20,
-        fontWeight: FontWeight.w700,
-        color: AppColors.textPrimary,
-      );
-
-  static TextStyle get heading3 => GoogleFonts.plusJakartaSans(
-        fontSize: 17,
-        fontWeight: FontWeight.w700,
-        color: AppColors.textPrimary,
-      );
+  static TextStyle get heroTitle =>
+      _base(size: 22, weight: FontWeight.w800, color: Colors.white, height: 1.2);
+  static TextStyle get heading1 =>
+      _base(size: 26, weight: FontWeight.w800, letterSpacing: -0.4);
+  static TextStyle get heading2 => _base(size: 20, weight: FontWeight.w700);
+  static TextStyle get heading3 => _base(size: 17, weight: FontWeight.w700);
 
   // Body
-  static TextStyle get bodyLarge => GoogleFonts.plusJakartaSans(
-        fontSize: 15,
-        fontWeight: FontWeight.w400,
-        color: AppColors.textPrimary,
-      );
+  static TextStyle get bodyLarge => _base(size: 15, weight: FontWeight.w400);
+  static TextStyle get bodyMedium => _base(
+      size: 13, weight: FontWeight.w400, color: AppColors.textSecondary, height: 1.45);
+  static TextStyle get bodySmall =>
+      _base(size: 11, weight: FontWeight.w400, color: AppColors.textHint);
 
-  static TextStyle get bodyMedium => GoogleFonts.plusJakartaSans(
-        fontSize: 13,
-        fontWeight: FontWeight.w400,
-        color: AppColors.textSecondary,
-        height: 1.4,
-      );
+  // Labels & chips
+  static TextStyle get labelBold => _base(size: 13, weight: FontWeight.w700);
+  static TextStyle get labelMedium => _base(size: 12, weight: FontWeight.w600);
+  static TextStyle get caption =>
+      _base(size: 11, weight: FontWeight.w500, color: AppColors.textSecondary);
 
-  static TextStyle get bodySmall => GoogleFonts.plusJakartaSans(
-        fontSize: 11,
-        fontWeight: FontWeight.w400,
-        color: AppColors.textHint,
-      );
+  // Buttons & badges
+  static TextStyle get buttonText =>
+      _base(size: 14, weight: FontWeight.w700, color: Colors.white);
+  static TextStyle get chipText =>
+      _base(size: 12, weight: FontWeight.w600, letterSpacing: 0.2);
+  static TextStyle get badgeText =>
+      _base(size: 10, weight: FontWeight.w700, letterSpacing: 0.3);
 
-  // Labels & Chips
-  static TextStyle get labelBold => GoogleFonts.plusJakartaSans(
-        fontSize: 13,
-        fontWeight: FontWeight.w700,
-        color: AppColors.textPrimary,
-      );
-
-  static TextStyle get labelMedium => GoogleFonts.plusJakartaSans(
-        fontSize: 12,
-        fontWeight: FontWeight.w600,
-        color: AppColors.textPrimary,
-      );
-
-  static TextStyle get caption => GoogleFonts.plusJakartaSans(
-        fontSize: 11,
-        fontWeight: FontWeight.w500,
-        color: AppColors.textSecondary,
-      );
-
-  // Buttons & Badges
-  static TextStyle get buttonText => GoogleFonts.plusJakartaSans(
-        fontSize: 14,
-        fontWeight: FontWeight.w700,
-        color: Colors.white,
-      );
-
-  static TextStyle get chipText => GoogleFonts.plusJakartaSans(
-        fontSize: 12,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 0.5,
-      );
-
-  static TextStyle get badgeText => GoogleFonts.plusJakartaSans(
-        fontSize: 10,
-        fontWeight: FontWeight.w800,
-        letterSpacing: 0.4,
-      );
-
-  // Drama Specific
-  static TextStyle get dramaTitle => GoogleFonts.plusJakartaSans(
-        fontSize: 13,
-        fontWeight: FontWeight.w700,
-        color: AppColors.textPrimary,
-        height: 1.25,
-      );
-
-  static TextStyle get episodeCount => GoogleFonts.plusJakartaSans(
-        fontSize: 11,
-        fontWeight: FontWeight.w500,
-        color: AppColors.neutral,
-      );
-
-  static TextStyle get rankNumber => GoogleFonts.plusJakartaSans(
-        fontSize: 54,
-        fontWeight: FontWeight.w900,
-        height: 0.9,
-      );
+  // Tour specific
+  static TextStyle get tourTitle =>
+      _base(size: 14, weight: FontWeight.w700, height: 1.3);
+  static TextStyle get tourLocation =>
+      _base(size: 12, weight: FontWeight.w500, color: AppColors.textSecondary);
+  static TextStyle get price =>
+      _base(size: 15, weight: FontWeight.w800, color: AppColors.priceTag);
 }

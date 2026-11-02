@@ -13,7 +13,6 @@ class AuthLoading extends AuthState {}
 
 class AuthAuthenticated extends AuthState {
   final User user;
-
   const AuthAuthenticated(this.user);
 
   @override
@@ -22,9 +21,19 @@ class AuthAuthenticated extends AuthState {
 
 class AuthUnauthenticated extends AuthState {}
 
+/// Đăng ký xong, BE đã gửi OTP về email
+class AuthRegisterSuccess extends AuthState {
+  final String email;
+  const AuthRegisterSuccess(this.email);
+
+  @override
+  List<Object?> get props => [email];
+}
+
+class AuthOtpVerified extends AuthState {}
+
 class AuthError extends AuthState {
   final String message;
-
   const AuthError(this.message);
 
   @override

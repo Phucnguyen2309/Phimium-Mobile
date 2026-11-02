@@ -33,11 +33,10 @@ class AppDimens {
   static const double avatarLg = 56.0;
   static const double avatarXl = 80.0;
 
-  // Drama card sizes
-  static const double dramaCardWidth = 130.0;
-  static const double dramaCardHeight = 180.0;
-  static const double dramaCardWidthLg = 160.0;
-  static const double dramaCardHeightLg = 220.0;
+  // Tour card sizes
+  static const double tourCardWidth = 200.0;
+  static const double tourCardImageHeight = 130.0;
+  static const double tourCardWidthLg = 260.0;
 
   // Banner
   static const double bannerHeight = 220.0;
