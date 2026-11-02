@@ -16,7 +16,8 @@ class User extends Equatable {
     this.buddyId,
   });
 
-  bool get isBuddy => buddyId != null && buddyId!.isNotEmpty;
+  bool get isBuddy =>
+      role.toUpperCase() == 'BUDDY' || (buddyId != null && buddyId!.isNotEmpty);
 
   @override
   List<Object?> get props => [id, email, fullName, role, buddyId];

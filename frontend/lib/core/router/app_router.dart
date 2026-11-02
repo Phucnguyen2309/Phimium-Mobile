@@ -5,6 +5,8 @@ import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/auth/presentation/pages/verify_otp_page.dart';
 import '../../features/booking/presentation/pages/booking_page.dart';
 import '../../features/booking/presentation/pages/my_bookings_page.dart';
+import '../../features/booking/presentation/pages/payment_history_page.dart';
+import '../../features/buddy/presentation/pages/buddy_workspace_page.dart';
 import '../../features/explore/presentation/pages/explore_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
@@ -33,6 +35,8 @@ class AppRouter {
   static const String booking = '/tour/:id/book';
   static const String buddyReviews = '/buddy/:buddyId/reviews';
   static const String myBookings = '/bookings';
+  static const String paymentHistory = '/payment-history';
+  static const String buddyWorkspace = '/buddy-workspace';
   static const String writeReview = '/bookings/:id/review';
   static const String myReviews = '/my-reviews';
 
@@ -87,8 +91,10 @@ class AppRouter {
         builder: (context, state) => BookingPage(tourId: state.pathParameters['id']!),
       ),
 
-      // Booking & Review
+      // Booking, Payment, Buddy & Review
       GoRoute(path: myBookings, builder: (context, state) => const MyBookingsPage()),
+      GoRoute(path: paymentHistory, builder: (context, state) => const PaymentHistoryPage()),
+      GoRoute(path: buddyWorkspace, builder: (context, state) => const BuddyWorkspacePage()),
       GoRoute(
         path: writeReview,
         builder: (context, state) => WriteReviewPage(bookingId: state.pathParameters['id']!),

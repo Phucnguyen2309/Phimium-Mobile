@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'app_colors.dart';
 
-/// Phimium Travel Theme - nền sáng kem ấm, xanh ngọc + cam nghệ
+/// Phimium Travel Theme - đồng bộ bảng màu Navy #162456 + Vàng #FDC700 + Slate #F8FAFC của Web
 class AppTheme {
   AppTheme._();
 
@@ -18,7 +18,7 @@ class AppTheme {
         surface: AppColors.surface,
         error: AppColors.error,
         onPrimary: Colors.white,
-        onSecondary: Colors.white,
+        onSecondary: AppColors.primary,
         onSurface: AppColors.textPrimary,
         onError: Colors.white,
       ),
@@ -27,16 +27,17 @@ class AppTheme {
         displayColor: AppColors.textPrimary,
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: AppColors.background,
+        backgroundColor: AppColors.surface,
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
         centerTitle: false,
-        scrolledUnderElevation: 0,
+        scrolledUnderElevation: 0.5,
+        surfaceTintColor: Colors.transparent,
         iconTheme: const IconThemeData(color: AppColors.textPrimary),
         titleTextStyle: GoogleFonts.beVietnamPro(
           color: AppColors.textPrimary,
-          fontSize: 18,
-          fontWeight: FontWeight.w700,
+          fontSize: 17,
+          fontWeight: FontWeight.w800,
         ),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
@@ -50,9 +51,18 @@ class AppTheme {
       cardTheme: CardThemeData(
         color: AppColors.cardBackground,
         elevation: 0,
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: AppColors.border, width: 0.8),
+          side: const BorderSide(color: AppColors.border, width: 1),
+        ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: AppColors.surface,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: AppColors.border),
         ),
       ),
       dividerTheme: const DividerThemeData(color: AppColors.divider, thickness: 1),
@@ -60,50 +70,58 @@ class AppTheme {
         filled: true,
         fillColor: AppColors.surface,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: AppColors.border),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: AppColors.border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.6),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: AppColors.error),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.error, width: 1.6),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         hintStyle: GoogleFonts.beVietnamPro(color: AppColors.textHint, fontSize: 13),
-        prefixIconColor: AppColors.textSecondary,
-        suffixIconColor: AppColors.textSecondary,
+        prefixIconColor: AppColors.neutral,
+        suffixIconColor: AppColors.neutral,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           disabledBackgroundColor: AppColors.textDisabled,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           elevation: 0,
-          minimumSize: const Size(0, 50),
-          textStyle: GoogleFonts.beVietnamPro(fontSize: 15, fontWeight: FontWeight.w700),
+          minimumSize: const Size(0, 48),
+          textStyle: GoogleFonts.beVietnamPro(fontSize: 14, fontWeight: FontWeight.w700),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.primary,
-          side: const BorderSide(color: AppColors.primary),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          textStyle: GoogleFonts.beVietnamPro(fontSize: 14, fontWeight: FontWeight.w600),
+          side: const BorderSide(color: AppColors.border, width: 1.2),
+          backgroundColor: AppColors.surface,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          textStyle: GoogleFonts.beVietnamPro(fontSize: 13, fontWeight: FontWeight.w700),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(foregroundColor: AppColors.primary),
+        style: TextButton.styleFrom(
+          foregroundColor: AppColors.primary,
+          textStyle: GoogleFonts.beVietnamPro(fontSize: 13, fontWeight: FontWeight.w700),
+        ),
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: AppColors.chipInactive,
+        backgroundColor: AppColors.surface,
         selectedColor: AppColors.primary,
         labelStyle: GoogleFonts.beVietnamPro(
           color: AppColors.textPrimary,
@@ -112,13 +130,14 @@ class AppTheme {
         ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: BorderSide.none,
+          side: const BorderSide(color: AppColors.border),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       ),
-      snackBarTheme: const SnackBarThemeData(
-        backgroundColor: AppColors.textPrimary,
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: AppColors.primary,
         behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
       progressIndicatorTheme:
           const ProgressIndicatorThemeData(color: AppColors.primary),

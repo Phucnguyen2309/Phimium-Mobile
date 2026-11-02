@@ -17,12 +17,19 @@ class DioClient {
         connectTimeout: const Duration(seconds: 30),
         receiveTimeout: const Duration(seconds: 30),
         sendTimeout: const Duration(seconds: 30),
+        extra: kIsWeb ? {'withCredentials': true} : const {},
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
       ),
     );
+
+    if (kIsWeb) {
+      try {
+        (_dio.httpClientAdapter as dynamic).withCredentials = true;
+      } catch (_) {}
+    }
 
     _dio.interceptors.add(ApiInterceptor());
     if (kDebugMode) {
@@ -41,12 +48,15 @@ class DioClient {
 
   Dio get dio => _dio;
 
-  /// Uu tien: --dart-define=API_BASE_URL > file .env > ApiConstants.baseUrl
+  /// Uu tien: --dart-define=API_BASE_URL > file .env > tu dong theo nen tang
   static String _resolveBaseUrl() {
     const fromDefine = String.fromEnvironment('API_BASE_URL');
     if (fromDefine.isNotEmpty) return fromDefine;
     final fromEnv = dotenv.isInitialized ? dotenv.maybeGet('API_BASE_URL') : null;
     if (fromEnv != null && fromEnv.isNotEmpty) return fromEnv;
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
+      return 'http://localhost:8080';
+    }
     return ApiConstants.baseUrl;
   }
 }

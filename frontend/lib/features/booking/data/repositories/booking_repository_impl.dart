@@ -9,6 +9,22 @@ class BookingRepositoryImpl implements BookingRepository {
   BookingRepositoryImpl(this._remote);
 
   @override
+  Future<PriceQuote> getPriceQuote({
+    required String departureId,
+    required int adultCount,
+    required int childCount,
+    String? couponCode,
+  }) async {
+    final body = <String, dynamic>{
+      'departureId': departureId,
+      'adultCount': adultCount,
+      'childCount': childCount,
+      if (couponCode != null && couponCode.isNotEmpty) 'couponCode': couponCode,
+    };
+    return BookingModel.quoteFromJson(await _remote.getPriceQuote(body));
+  }
+
+  @override
   Future<Booking> createBooking({
     required String departureId,
     required int adultCount,
@@ -39,6 +55,20 @@ class BookingRepositoryImpl implements BookingRepository {
       BookingModel.fromJson(await _remote.cancelRegistration(bookingId));
 
   @override
+  Future<Booking> checkInBooking(String bookingId) async =>
+      BookingModel.fromJson(await _remote.checkInRegistration(bookingId));
+
+  @override
   Future<PaymentCheckout> createPayment(String bookingId) async =>
       BookingModel.paymentFromJson(await _remote.createPayment(bookingId));
+
+  @override
+  Future<List<PaymentRecord>> getMyPayments({int page = 0, int size = 20}) async {
+    final raw = await _remote.getMyPayments(page: page, size: size);
+    return raw.map(BookingModel.paymentRecordFromJson).toList();
+  }
+
+  @override
+  Future<PaymentRecord> getPaymentDetail(String paymentId) async =>
+      BookingModel.paymentRecordFromJson(await _remote.getPaymentDetail(paymentId));
 }

@@ -36,10 +36,19 @@ class TourTypeBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(
         color: onImage ? type.color : type.color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20),
+        boxShadow: onImage
+            ? [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.2),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ]
+            : null,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -78,13 +87,20 @@ class WishlistButton extends StatelessWidget {
             width: size,
             height: size,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.92),
+              color: Colors.white.withValues(alpha: 0.94),
               shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.12),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Icon(
               saved ? Icons.favorite_rounded : Icons.favorite_border_rounded,
               size: size * 0.55,
-              color: saved ? AppColors.secondary : AppColors.textSecondary,
+              color: saved ? AppColors.error : AppColors.textSecondary,
             ),
           ),
         );
@@ -93,7 +109,7 @@ class WishlistButton extends StatelessWidget {
   }
 }
 
-/// Thẻ tour dọc - dùng cho hàng ngang & lưới
+/// Thẻ tour dọc - dùng cho hàng ngang & lưới (đồng bộ nút Vàng #FDC700 của Web)
 class TourCard extends StatelessWidget {
   final Tour tour;
   final double? width;
@@ -109,7 +125,14 @@ class TourCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.cardBackground,
           borderRadius: BorderRadius.circular(AppDimens.radiusLg),
-          border: Border.all(color: AppColors.border, width: 0.8),
+          border: Border.all(color: AppColors.border, width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: 0.05),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -130,46 +153,87 @@ class TourCard extends StatelessWidget {
                   top: 8,
                   child: TourTypeBadge(type: tour.type, onImage: true),
                 ),
-                Positioned(right: 8, top: 8, child: WishlistButton(tourId: tour.id, size: 30)),
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: WishlistButton(tourId: tour.id, size: 30),
+                ),
               ],
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    tour.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTextStyles.tourTitle,
-                  ),
-                  const SizedBox(height: 4),
-                  if (tour.locationName != null)
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      tour.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.tourTitle.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    if (tour.locationName != null)
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.place_outlined,
+                            size: 13,
+                            color: AppColors.info,
+                          ),
+                          const SizedBox(width: 3),
+                          Expanded(
+                            child: Text(
+                              tour.locationName!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTextStyles.tourLocation,
+                            ),
+                          ),
+                        ],
+                      ),
+                    const Spacer(),
                     Row(
                       children: [
-                        const Icon(Icons.place_outlined, size: 13, color: AppColors.textHint),
-                        const SizedBox(width: 2),
                         Expanded(
-                          child: Text(
-                            tour.locationName!,
+                          child: Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: Formatters.vnd(tour.price),
+                                  style: AppTextStyles.price,
+                                ),
+                                TextSpan(
+                                  text: AppStrings.perPerson,
+                                  style: AppTextStyles.caption,
+                                ),
+                              ],
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: AppTextStyles.tourLocation,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.secondary,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 14,
+                            color: AppColors.primary,
                           ),
                         ),
                       ],
                     ),
-                  const SizedBox(height: 6),
-                  Text.rich(
-                    TextSpan(
-                      children: [
-                        TextSpan(text: Formatters.vnd(tour.price), style: AppTextStyles.price),
-                        TextSpan(text: AppStrings.perPerson, style: AppTextStyles.caption),
-                      ],
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],
@@ -194,7 +258,14 @@ class TourListTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.cardBackground,
           borderRadius: BorderRadius.circular(AppDimens.radiusLg),
-          border: Border.all(color: AppColors.border, width: 0.8),
+          border: Border.all(color: AppColors.border, width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -219,16 +290,46 @@ class TourListTile extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 6),
-                  Text(tour.title,
-                      maxLines: 2, overflow: TextOverflow.ellipsis, style: AppTextStyles.tourTitle),
+                  Text(
+                    tour.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.tourTitle.copyWith(
+                      color: AppColors.primary,
+                    ),
+                  ),
                   const SizedBox(height: 4),
                   if (tour.locationName != null)
-                    Text(tour.locationName!,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.tourLocation),
+                    Text(
+                      tour.locationName!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.tourLocation,
+                    ),
                   const SizedBox(height: 6),
-                  Text(Formatters.vnd(tour.price), style: AppTextStyles.price),
+                  Row(
+                    children: [
+                      Text(Formatters.vnd(tour.price), style: AppTextStyles.price),
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.secondary,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'Chi tiết →',
+                          style: AppTextStyles.badgeText.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),

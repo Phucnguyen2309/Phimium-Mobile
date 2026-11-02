@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../../domain/entities/user.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_local_datasource.dart';
@@ -76,7 +78,19 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<User?> getCurrentUser() async {
     final cached = await _local.getCachedUser();
-    if (cached != null) return cached.toEntity();
+    if (cached != null) {
+      if (kIsWeb) {
+        try {
+          final fresh = await _remote.getMe();
+          await _local.saveUser(fresh);
+          return fresh.toEntity();
+        } catch (_) {
+          await _local.clearAll();
+          return null;
+        }
+      }
+      return cached.toEntity();
+    }
 
     if (await _local.getAccessToken() != null) {
       try {

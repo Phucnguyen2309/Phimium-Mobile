@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../constants/api_constants.dart';
@@ -14,6 +15,11 @@ class ApiInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
+    if (kIsWeb) {
+      options.extra['withCredentials'] = true;
+      handler.next(options);
+      return;
+    }
     final token = await _storage.read(key: StorageKeys.accessToken);
     if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
@@ -25,6 +31,26 @@ class ApiInterceptor extends Interceptor {
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     final isRefreshCall = err.requestOptions.path.contains(ApiConstants.refreshToken);
     if (err.response?.statusCode == 401 && !isRefreshCall) {
+      if (kIsWeb) {
+        try {
+          final dio = Dio(
+            BaseOptions(
+              baseUrl: err.requestOptions.baseUrl,
+              extra: {'withCredentials': true},
+            ),
+          );
+          try {
+            (dio.httpClientAdapter as dynamic).withCredentials = true;
+          } catch (_) {}
+          await dio.post(ApiConstants.refreshToken);
+          err.requestOptions.extra['withCredentials'] = true;
+          final retryResponse = await dio.fetch(err.requestOptions);
+          return handler.resolve(retryResponse);
+        } catch (_) {
+          return handler.next(err);
+        }
+      }
+
       final refreshToken = await _storage.read(key: StorageKeys.refreshToken);
       if (refreshToken != null) {
         try {

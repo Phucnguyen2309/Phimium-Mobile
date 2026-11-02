@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 /// Sealed class for handling API results
 sealed class ApiResult<T> {
@@ -19,7 +20,7 @@ class ApiError<T> extends ApiResult<T> {
 /// Lấy phần `data` trong ApiResponse của BE: { success, code, message, data }
 T unwrapData<T>(Response response) {
   final body = response.data;
-  if (body is Map<String, dynamic> && body.containsKey('data')) {
+  if (body is Map && body.containsKey('data')) {
     return body['data'] as T;
   }
   return body as T;
@@ -28,6 +29,9 @@ T unwrapData<T>(Response response) {
 /// Chuyển mọi lỗi thành câu thông báo tiếng Việt dễ hiểu
 String readableError(Object error) {
   if (error is DioException) return error.errorMessage;
+  if (kDebugMode) {
+    debugPrint('readableError: $error');
+  }
   return 'Đã xảy ra lỗi. Vui lòng thử lại.';
 }
 
