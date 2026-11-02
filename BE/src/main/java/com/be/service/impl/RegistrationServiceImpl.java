@@ -45,6 +45,7 @@ import com.be.service.RegistrationService;
 import com.be.util.DateTimeUtils;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -58,6 +59,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class RegistrationServiceImpl implements RegistrationService {
 
     private final RegistrationRepository registrationRepository;
@@ -134,6 +136,8 @@ public class RegistrationServiceImpl implements RegistrationService {
         }
         if (activity.getStatus() == ActivityStatus.CANCELLED || activity.getStatus() == ActivityStatus.COMPLETED)
             throw new AppException(ErrorCode.DEPARTURE_NOT_AVAILABLE);
+        log.warn("CHECK past departure: id={} now={} start={}",
+                departure.getDepartureId(), DateTimeUtils.nowVietnam(), departure.getStartDateTime());
         if (!DateTimeUtils.nowVietnam().isBefore(departure.getStartDateTime())) {
             throw new AppException(ErrorCode.DEPARTURE_IN_PAST);
         }

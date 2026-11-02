@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
@@ -12,7 +13,7 @@ class DioClient {
   DioClient() {
     _dio = Dio(
       BaseOptions(
-        baseUrl: dotenv.env['API_BASE_URL'] ?? ApiConstants.baseUrl,
+        baseUrl: _resolveBaseUrl(),
         connectTimeout: const Duration(seconds: 30),
         receiveTimeout: const Duration(seconds: 30),
         sendTimeout: const Duration(seconds: 30),
@@ -23,19 +24,29 @@ class DioClient {
       ),
     );
 
-    // Add interceptors
-    _dio.interceptors.addAll([
-      ApiInterceptor(),
-      PrettyDioLogger(
-        requestHeader: true,
-        requestBody: true,
-        responseBody: true,
-        responseHeader: false,
-        error: true,
-        compact: true,
-      ),
-    ]);
+    _dio.interceptors.add(ApiInterceptor());
+    if (kDebugMode) {
+      _dio.interceptors.add(
+        PrettyDioLogger(
+          requestHeader: false,
+          requestBody: true,
+          responseBody: true,
+          responseHeader: false,
+          error: true,
+          compact: true,
+        ),
+      );
+    }
   }
 
   Dio get dio => _dio;
+
+  /// Uu tien: --dart-define=API_BASE_URL > file .env > ApiConstants.baseUrl
+  static String _resolveBaseUrl() {
+    const fromDefine = String.fromEnvironment('API_BASE_URL');
+    if (fromDefine.isNotEmpty) return fromDefine;
+    final fromEnv = dotenv.isInitialized ? dotenv.maybeGet('API_BASE_URL') : null;
+    if (fromEnv != null && fromEnv.isNotEmpty) return fromEnv;
+    return ApiConstants.baseUrl;
+  }
 }

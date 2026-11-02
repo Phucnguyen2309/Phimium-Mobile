@@ -16,9 +16,29 @@ class ApiError<T> extends ApiResult<T> {
   const ApiError(this.message, {this.statusCode});
 }
 
-/// Extension to convert DioException to ApiError
+/// Lấy phần `data` trong ApiResponse của BE: { success, code, message, data }
+T unwrapData<T>(Response response) {
+  final body = response.data;
+  if (body is Map<String, dynamic> && body.containsKey('data')) {
+    return body['data'] as T;
+  }
+  return body as T;
+}
+
+/// Chuyển mọi lỗi thành câu thông báo tiếng Việt dễ hiểu
+String readableError(Object error) {
+  if (error is DioException) return error.errorMessage;
+  return 'Đã xảy ra lỗi. Vui lòng thử lại.';
+}
+
+/// Extension to convert DioException to a user-facing message
 extension DioExceptionHandler on DioException {
   String get errorMessage {
+    // Ưu tiên message do BE trả về (ErrorResponse / ApiResponse)
+    final body = response?.data;
+    if (body is Map && body['message'] is String && (body['message'] as String).isNotEmpty) {
+      return body['message'] as String;
+    }
     switch (type) {
       case DioExceptionType.connectionTimeout:
         return 'Kết nối hết thời gian. Vui lòng thử lại.';
@@ -31,7 +51,7 @@ extension DioExceptionHandler on DioException {
       case DioExceptionType.cancel:
         return 'Yêu cầu đã bị hủy.';
       case DioExceptionType.connectionError:
-        return 'Không có kết nối mạng. Vui lòng kiểm tra lại.';
+        return 'Không kết nối được máy chủ. Vui lòng kiểm tra mạng / BE.';
       default:
         return 'Đã xảy ra lỗi. Vui lòng thử lại.';
     }

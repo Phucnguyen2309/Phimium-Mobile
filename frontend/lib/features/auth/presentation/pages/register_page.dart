@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/router/app_router.dart';
+import '../../../../core/theme/app_dimens.dart';
+import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/formatters.dart';
+import '../bloc/auth_bloc.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -16,181 +20,183 @@ class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
-  bool _obscurePassword = true;
-  bool _obscureConfirm = true;
-  bool _isLoading = false;
+  final _confirmController = TextEditingController();
+  DateTime? _birthday;
+  bool _obscure = true;
+
+  // Khớp regex của BE (RegisterRequest)
+  static final _passwordRegex =
+      RegExp(r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$');
+  static final _phoneRegex = RegExp(r'^0[35789]\d{8}$');
 
   @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
+    _phoneController.dispose();
     _passwordController.dispose();
-    _confirmPasswordController.dispose();
+    _confirmController.dispose();
     super.dispose();
   }
 
+  Future<void> _pickBirthday() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _birthday ?? DateTime(now.year - 20),
+      firstDate: DateTime(1940),
+      lastDate: DateTime(now.year - 16, now.month, now.day),
+    );
+    if (picked != null) setState(() => _birthday = picked);
+  }
+
   void _onRegister() {
-    if (_formKey.currentState?.validate() ?? false) {
-      setState(() => _isLoading = true);
-      // TODO: Connect to AuthBloc once DI is wired up
-      Future.delayed(const Duration(milliseconds: 800), () {
-        if (mounted) {
-          setState(() => _isLoading = false);
-          context.go('/home');
-        }
-      });
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    if (_birthday == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng chọn ngày sinh')),
+      );
+      return;
     }
+    context.read<AuthBloc>().add(AuthRegisterRequested(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+          fullName: _nameController.text.trim(),
+          birthday: _birthday!,
+          phone: _phoneController.text.trim(),
+        ));
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-          onPressed: () => context.pop(),
-        ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppDimens.xl),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  AppStrings.register,
-                  style: Theme.of(context).textTheme.displayMedium,
-                ),
-                const SizedBox(height: AppDimens.sm),
-                Text(
-                  'Tạo tài khoản để bắt đầu xem phim',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                const SizedBox(height: AppDimens.xxl),
-                // Full name
-                TextFormField(
-                  controller: _nameController,
-                  style: const TextStyle(color: AppColors.textPrimary),
-                  decoration: const InputDecoration(
-                    labelText: AppStrings.fullName,
-                    prefixIcon: Icon(Icons.person_outline, color: AppColors.textSecondary),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) return 'Vui lòng nhập họ tên';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: AppDimens.df),
-                // Email
-                TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  style: const TextStyle(color: AppColors.textPrimary),
-                  decoration: const InputDecoration(
-                    labelText: AppStrings.email,
-                    prefixIcon: Icon(Icons.email_outlined, color: AppColors.textSecondary),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) return 'Vui lòng nhập email';
-                    if (!RegExp(r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                      return 'Email không hợp lệ';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: AppDimens.df),
-                // Password
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: _obscurePassword,
-                  style: const TextStyle(color: AppColors.textPrimary),
-                  decoration: InputDecoration(
-                    labelText: AppStrings.password,
-                    prefixIcon: const Icon(Icons.lock_outline, color: AppColors.textSecondary),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                        color: AppColors.textSecondary,
-                      ),
-                      onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) return 'Vui lòng nhập mật khẩu';
-                    if (value.length < 6) return 'Mật khẩu tối thiểu 6 ký tự';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: AppDimens.df),
-                // Confirm password
-                TextFormField(
-                  controller: _confirmPasswordController,
-                  obscureText: _obscureConfirm,
-                  style: const TextStyle(color: AppColors.textPrimary),
-                  decoration: InputDecoration(
-                    labelText: AppStrings.confirmPassword,
-                    prefixIcon: const Icon(Icons.lock_outline, color: AppColors.textSecondary),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscureConfirm ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                        color: AppColors.textSecondary,
-                      ),
-                      onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) return 'Vui lòng xác nhận mật khẩu';
-                    if (value != _passwordController.text) return 'Mật khẩu không khớp';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: AppDimens.xl),
-                // Register button
-                ElevatedButton(
-                  onPressed: _isLoading ? null : _onRegister,
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 22,
-                          width: 22,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.5,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Text(AppStrings.register),
-                ),
-                const SizedBox(height: AppDimens.xl),
-                // Login link
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+    return BlocConsumer<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthRegisterSuccess) {
+          context.pushReplacement(
+            '${AppRouter.verifyOtp}?email=${Uri.encodeComponent(state.email)}',
+          );
+        } else if (state is AuthError) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(state.message)));
+        }
+      },
+      builder: (context, state) {
+        final isLoading = state is AuthLoading;
+        return Scaffold(
+          appBar: AppBar(title: const Text(AppStrings.register)),
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppDimens.xl),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(
-                      AppStrings.alreadyHaveAccount,
-                      style: Theme.of(context).textTheme.bodyMedium,
+                    Text('Tạo tài khoản để đặt tour cùng Buddy',
+                        style: AppTextStyles.bodyMedium),
+                    const SizedBox(height: AppDimens.lg),
+                    TextFormField(
+                      controller: _nameController,
+                      decoration: const InputDecoration(
+                        hintText: AppStrings.fullName,
+                        prefixIcon: Icon(Icons.person_outline),
+                      ),
+                      validator: (v) => (v == null || v.trim().length < 2)
+                          ? 'Họ tên tối thiểu 2 ký tự'
+                          : null,
                     ),
-                    GestureDetector(
-                      onTap: () => context.pop(),
-                      child: const Text(
-                        AppStrings.login,
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
+                    const SizedBox(height: AppDimens.df),
+                    TextFormField(
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: const InputDecoration(
+                        hintText: AppStrings.email,
+                        prefixIcon: Icon(Icons.email_outlined),
+                      ),
+                      validator: (v) =>
+                          (v == null || !v.contains('@')) ? 'Email không hợp lệ' : null,
+                    ),
+                    const SizedBox(height: AppDimens.df),
+                    TextFormField(
+                      controller: _phoneController,
+                      keyboardType: TextInputType.phone,
+                      decoration: const InputDecoration(
+                        hintText: AppStrings.phone,
+                        prefixIcon: Icon(Icons.phone_outlined),
+                      ),
+                      validator: (v) => (v == null || !_phoneRegex.hasMatch(v.trim()))
+                          ? 'Số điện thoại VN 10 số (03/05/07/08/09...)'
+                          : null,
+                    ),
+                    const SizedBox(height: AppDimens.df),
+                    InkWell(
+                      onTap: _pickBirthday,
+                      borderRadius: BorderRadius.circular(14),
+                      child: InputDecorator(
+                        decoration: const InputDecoration(
+                          prefixIcon: Icon(Icons.cake_outlined),
+                        ),
+                        child: Text(
+                          _birthday == null
+                              ? AppStrings.birthday
+                              : Formatters.date(_birthday),
+                          style: _birthday == null
+                              ? AppTextStyles.bodyMedium
+                              : AppTextStyles.bodyLarge,
                         ),
                       ),
                     ),
+                    const SizedBox(height: AppDimens.df),
+                    TextFormField(
+                      controller: _passwordController,
+                      obscureText: _obscure,
+                      decoration: InputDecoration(
+                        hintText: AppStrings.password,
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        suffixIcon: IconButton(
+                          icon: Icon(_obscure
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined),
+                          onPressed: () => setState(() => _obscure = !_obscure),
+                        ),
+                      ),
+                      validator: (v) => (v == null || !_passwordRegex.hasMatch(v))
+                          ? 'Tối thiểu 8 ký tự, gồm chữ, số và ký tự đặc biệt'
+                          : null,
+                    ),
+                    const SizedBox(height: AppDimens.df),
+                    TextFormField(
+                      controller: _confirmController,
+                      obscureText: _obscure,
+                      decoration: const InputDecoration(
+                        hintText: AppStrings.confirmPassword,
+                        prefixIcon: Icon(Icons.lock_outline),
+                      ),
+                      validator: (v) => v != _passwordController.text
+                          ? 'Mật khẩu không khớp'
+                          : null,
+                    ),
+                    const SizedBox(height: AppDimens.xl),
+                    ElevatedButton(
+                      onPressed: isLoading ? null : _onRegister,
+                      child: isLoading
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                  color: Colors.white, strokeWidth: 2.4),
+                            )
+                          : const Text(AppStrings.register),
+                    ),
                   ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

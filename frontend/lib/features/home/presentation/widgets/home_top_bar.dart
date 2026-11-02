@@ -1,131 +1,87 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/app_strings.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
 
-/// Top bar for Home Page: Logo + VIP Coin Pill + Search + Profile Avatar
+/// Thanh trên trang chủ: logo Phimium + lời chào + tìm kiếm + tài khoản
 class HomeTopBar extends StatelessWidget {
   const HomeTopBar({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
       child: Row(
         children: [
-          // Logo: CineShorts
-          Row(
-            children: [
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  gradient: AppColors.primaryGradient,
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.4),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(11),
+            child: Image.asset('assets/images/logo.png', width: 38, height: 38),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: BlocBuilder<AuthBloc, AuthState>(
+              builder: (context, state) {
+                final name = state is AuthAuthenticated ? state.user.fullName : null;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name == null ? 'Xin chào!' : 'Xin chào, $name',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.caption,
+                    ),
+                    Text(
+                      AppStrings.appName,
+                      style: AppTextStyles.heading2.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ],
-                ),
-                child: const Icon(
-                  Icons.play_arrow_rounded,
-                  size: 18,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'CineShorts',
-                style: AppTextStyles.heading2.copyWith(
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -0.5,
-                ),
-              ),
-            ],
-          ),
-          const Spacer(),
-
-          // VIP Coin Pill Badge
-          GestureDetector(
-            onTap: () => context.push('/payment'),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: AppColors.vipBg,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: AppColors.vipGold.withValues(alpha: 0.6),
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.workspace_premium_rounded,
-                    color: AppColors.vipGold,
-                    size: 14,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    'VIP',
-                    style: AppTextStyles.badgeText.copyWith(
-                      color: AppColors.vipGold,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ],
-              ),
+                );
+              },
             ),
           ),
-          const SizedBox(width: 10),
-
-          // Search Icon Button
-          GestureDetector(
-            onTap: () => context.go('/search'),
-            child: Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: AppColors.surfaceLight,
-                shape: BoxShape.circle,
-                border: Border.all(color: AppColors.border, width: 0.8),
-              ),
-              child: const Icon(
-                Icons.search_rounded,
-                color: Colors.white,
-                size: 18,
-              ),
-            ),
+          _CircleButton(
+            icon: Icons.search_rounded,
+            onTap: () => context.go(AppRouter.explore),
           ),
-          const SizedBox(width: 10),
-
-          // Profile Avatar Button
-          GestureDetector(
-            onTap: () => context.go('/profile'),
-            child: Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF2C2C3E), Color(0xFF1E1E2C)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                shape: BoxShape.circle,
-                border: Border.all(color: AppColors.borderLight, width: 1),
-              ),
-              child: const Icon(
-                Icons.person_rounded,
-                color: AppColors.neutralLight,
-                size: 18,
-              ),
-            ),
+          const SizedBox(width: 8),
+          _CircleButton(
+            icon: Icons.person_outline_rounded,
+            onTap: () => context.go(AppRouter.profile),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _CircleButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _CircleButton({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          shape: BoxShape.circle,
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Icon(icon, color: AppColors.textPrimary, size: 20),
       ),
     );
   }

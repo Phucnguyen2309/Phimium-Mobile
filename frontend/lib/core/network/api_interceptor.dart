@@ -1,9 +1,11 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import '../constants/api_constants.dart';
 import '../constants/storage_keys.dart';
+import 'token_cookies.dart';
 
-/// API Interceptor to attach auth token and handle 401 errors
+/// Gắn access token vào request và tự refresh khi gặp 401
 class ApiInterceptor extends Interceptor {
   final _storage = const FlutterSecureStorage();
 
@@ -12,7 +14,6 @@ class ApiInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    // Get token from secure storage
     final token = await _storage.read(key: StorageKeys.accessToken);
     if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
@@ -22,41 +23,39 @@ class ApiInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-    if (err.response?.statusCode == 401) {
-      // Token expired - try refresh
+    final isRefreshCall = err.requestOptions.path.contains(ApiConstants.refreshToken);
+    if (err.response?.statusCode == 401 && !isRefreshCall) {
       final refreshToken = await _storage.read(key: StorageKeys.refreshToken);
       if (refreshToken != null) {
         try {
-          // Attempt token refresh
-          final dio = Dio();
+          final dio = Dio(BaseOptions(baseUrl: err.requestOptions.baseUrl));
           final response = await dio.post(
-            '${err.requestOptions.baseUrl}/auth/refresh',
+            ApiConstants.refreshToken,
             data: {'refreshToken': refreshToken},
           );
 
-          if (response.statusCode == 200) {
-            final newToken = response.data['accessToken'];
-            await _storage.write(
-              key: StorageKeys.accessToken,
-              value: newToken,
-            );
+          // BE trả về ApiResponse<LoginResponse> => { success, code, message, data: {...} }
+          final data = response.data is Map ? response.data['data'] : null;
+          final tokens = TokenCookies.fromResponse(
+            response,
+            data is Map ? Map<String, dynamic>.from(data) : null,
+          );
+          final newToken = tokens.access;
+          if (newToken.isNotEmpty) {
+            await _storage.write(key: StorageKeys.accessToken, value: newToken);
+            if (tokens.refresh.isNotEmpty) {
+              await _storage.write(key: StorageKeys.refreshToken, value: tokens.refresh);
+            }
 
-            // Retry original request with new token
             err.requestOptions.headers['Authorization'] = 'Bearer $newToken';
             final retryResponse = await dio.fetch(err.requestOptions);
             return handler.resolve(retryResponse);
           }
         } catch (_) {
-          // Refresh failed - clear tokens
           await _storage.deleteAll();
         }
       }
     }
     handler.next(err);
-  }
-
-  @override
-  void onResponse(Response response, ResponseInterceptorHandler handler) {
-    handler.next(response);
   }
 }

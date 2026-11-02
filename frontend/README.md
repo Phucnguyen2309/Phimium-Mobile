@@ -1,17 +1,11 @@
-# app_short_drama
+# Phimium Mobile (Flutter)
 
-A new Flutter project.
+App đặt food tour & history tour Sài Gòn cùng Buddy địa phương.
 
-## Getting Started
+## Chạy app
 
-This project is a starting point for a Flutter application.
+1. Copy `.env.example` thành `.env` và sửa `API_BASE_URL` trỏ tới BE (thư mục `../BE`).
+2. `flutter pub get`
+3. `flutter run`
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Android emulator dùng `http://10.0.2.2:8080`, iOS simulator / web dùng `http://localhost:8080`.

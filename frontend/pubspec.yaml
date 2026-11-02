@@ -1,5 +1,5 @@
-name: app_short_drama
-description: "Short Drama - Watch & Enjoy Short Films"
+name: phimium_mobile
+description: "Phimium - Saigon food & history tour cùng Buddy địa phương"
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -42,10 +42,6 @@ dependencies:
   hive: ^2.2.3
   hive_flutter: ^1.1.0
 
-  # Video Player
-  video_player: ^2.9.5
-  chewie: ^1.11.3
-
   # Utils
   intl: ^0.20.2
   url_launcher: ^6.3.1
@@ -55,8 +51,7 @@ dependencies:
   flutter_dotenv: ^5.2.1
   logger: ^2.5.0
 
-  # Payment
-  in_app_purchase: ^3.2.0
+  # Đã bỏ: video_player, chewie, in_app_purchase (chỉ dùng cho app xem phim/mua xu)
 
 dev_dependencies:
   flutter_test:
@@ -76,4 +71,6 @@ flutter:
     - assets/images/
     - assets/icons/
     - assets/animations/
-    - .env
+    # .env khong bat buoc. Muon doi dia chi BE: chay
+    #   flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8080
+    # hoac tao file .env roi them dong "- .env" vao day.

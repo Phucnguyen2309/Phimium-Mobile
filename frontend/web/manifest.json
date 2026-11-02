@@ -1,11 +1,11 @@
 {
-    "name": "app_short_drama",
-    "short_name": "app_short_drama",
+    "name": "Phimium",
+    "short_name": "Phimium",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#0E7C66",
+    "theme_color": "#0E7C66",
+    "description": "Phimium - Saigon food & history tour cùng Buddy địa phương",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

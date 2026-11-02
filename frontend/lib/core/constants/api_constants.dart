@@ -1,39 +1,44 @@
-/// API endpoint constants
+/// API endpoint constants - khớp với BE Spring Boot (thư mục BE/)
+///
+/// baseUrl mặc định trỏ tới BE chạy local cổng 8080.
+/// - Android emulator: http://10.0.2.2:8080
+/// - iOS simulator / web: http://localhost:8080
+/// Có thể ghi đè bằng API_BASE_URL trong file .env
 class ApiConstants {
   ApiConstants._();
 
-  static const String baseUrl = 'http://localhost:8080/api/v1';
+  static const String baseUrl = 'http://10.0.2.2:8080';
 
-  // Auth
-  static const String login = '/auth/login';
-  static const String register = '/auth/register';
-  static const String refreshToken = '/auth/refresh';
-  static const String logout = '/auth/logout';
-  static const String forgotPassword = '/auth/forgot-password';
+  // Auth  (AuthController - /api/auth)
+  static const String login = '/api/auth/login';
+  static const String register = '/api/auth/register';
+  static const String verifyOtp = '/api/auth/verify-otp';
+  static const String resendOtp = '/api/auth/resend-otp';
+  static const String refreshToken = '/api/auth/refresh';
+  static const String logout = '/api/auth/logout';
+  static const String me = '/api/auth/me';
 
-  // Drama
-  static const String dramas = '/dramas';
-  static const String trending = '/dramas/trending';
-  static const String categories = '/categories';
-  static const String episodes = '/episodes';
+  // Tour  (ActivityController - /api/activity)
+  static const String tours = '/api/activity/getAll';
+  static String tourDetail(String id) => '/api/activity/$id';
+  static const String joinedTours = '/api/activity/joined';
+  static String itineraryStops(String tourId) =>
+      '/api/activity/$tourId/itinerary-stops';
 
-  // Search
-  static const String search = '/search';
+  // Booking  (RegistrationController - /api/v1/registrations)
+  static const String registrations = '/api/v1/registrations';
+  static const String myRegistrations = '/api/v1/registrations/me';
+  static String cancelRegistration(String id) =>
+      '/api/v1/registrations/$id/cancel';
 
-  // User
-  static const String profile = '/users/profile';
-  static const String updateProfile = '/users/profile';
+  // Payment  (PaymentController - /api/payment)
+  static String createPayment(String registrationId) =>
+      '/api/payment/registration/$registrationId';
+  static const String myPayments = '/api/payment/me';
 
-  // Bookmark
-  static const String bookmarks = '/bookmarks';
-
-  // Comment & Rating
-  static const String comments = '/comments';
-  static const String ratings = '/ratings';
-
-  // Payment
-  static const String coinPackages = '/payments/packages';
-  static const String purchase = '/payments/purchase';
-  static const String transactions = '/payments/transactions';
-  static const String coinBalance = '/payments/balance';
+  // Review  (FeedBackController - /api/feedback)
+  static String createReview(String registrationId) =>
+      '/api/feedback/registrations/$registrationId';
+  static const String myReviews = '/api/feedback/me';
+  static String buddyReviews(String buddyId) => '/api/feedback/buddies/$buddyId';
 }

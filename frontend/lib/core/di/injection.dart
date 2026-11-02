@@ -1,42 +1,59 @@
 import 'package:get_it/get_it.dart';
 
+import '../../features/auth/data/datasources/auth_local_datasource.dart';
+import '../../features/auth/data/datasources/auth_remote_datasource.dart';
+import '../../features/auth/data/repositories/auth_repository_impl.dart';
+import '../../features/auth/domain/repositories/auth_repository.dart';
+import '../../features/auth/domain/usecases/auth_usecases.dart';
+import '../../features/auth/presentation/bloc/auth_bloc.dart';
+import '../../features/booking/data/datasources/booking_remote_datasource.dart';
+import '../../features/booking/data/repositories/booking_repository_impl.dart';
+import '../../features/booking/domain/repositories/booking_repository.dart';
+import '../../features/review/data/repositories/review_repository_impl.dart';
+import '../../features/review/domain/repositories/review_repository.dart';
+import '../../features/tour/data/datasources/tour_remote_datasource.dart';
+import '../../features/tour/data/repositories/tour_repository_impl.dart';
+import '../../features/tour/domain/repositories/tour_repository.dart';
+import '../../features/wishlist/data/datasources/wishlist_local_datasource.dart';
+import '../network/dio_client.dart';
+
 final getIt = GetIt.instance;
 
-/// Configure all dependencies using GetIt
-///
-/// TODO: Uncomment and wire up registrations as each feature
-/// module's data/domain/presentation layers are fully implemented.
-/// Currently only the Auth feature has complete implementations.
+/// Đăng ký toàn bộ dependency (GetIt)
 Future<void> configureDependencies() async {
   // ===== Core =====
-  // getIt.registerLazySingleton<DioClient>(() => DioClient());
+  getIt.registerLazySingleton<DioClient>(() => DioClient());
 
-  // ===== Auth Feature (fully implemented) =====
-  // Uncomment below once you want to connect to a real backend:
-  //
-  // getIt.registerLazySingleton<AuthRemoteDataSource>(
-  //   () => AuthRemoteDataSourceImpl(client: getIt()),
-  // );
-  // getIt.registerLazySingleton<AuthLocalDataSource>(
-  //   () => AuthLocalDataSourceImpl(),
-  // );
-  // getIt.registerLazySingleton<AuthRepository>(
-  //   () => AuthRepositoryImpl(
-  //     remoteDataSource: getIt(),
-  //     localDataSource: getIt(),
-  //   ),
-  // );
-  // getIt.registerFactory(() => LoginUseCase(getIt()));
-  // getIt.registerFactory(() => RegisterUseCase(getIt()));
-  // getIt.registerFactory(() => LogoutUseCase(getIt()));
-  // getIt.registerFactory(() => CheckAuthUseCase(getIt()));
-  // getIt.registerFactory(() => AuthBloc(
-  //       loginUseCase: getIt(),
-  //       registerUseCase: getIt(),
-  //       logoutUseCase: getIt(),
-  //       checkAuthUseCase: getIt(),
-  //     ));
+  // ===== Auth =====
+  getIt.registerLazySingleton<AuthRemoteDataSource>(
+    () => AuthRemoteDataSourceImpl(getIt()),
+  );
+  getIt.registerLazySingleton<AuthLocalDataSource>(() => AuthLocalDataSourceImpl());
+  getIt.registerLazySingleton<AuthRepository>(
+    () => AuthRepositoryImpl(getIt(), getIt()),
+  );
+  getIt.registerFactory(() => LoginUseCase(getIt()));
+  getIt.registerFactory(() => RegisterUseCase(getIt()));
+  getIt.registerFactory(() => VerifyOtpUseCase(getIt()));
+  getIt.registerFactory(() => LogoutUseCase(getIt()));
+  getIt.registerFactory(() => CheckAuthUseCase(getIt()));
+  getIt.registerLazySingleton<AuthBloc>(
+    () => AuthBloc(getIt(), getIt(), getIt(), getIt(), getIt()),
+  );
 
-  // ===== Other Features =====
-  // Wire up as implemented: Home, Drama, Search, Bookmark, Comment, Payment, Profile
+  // ===== Tour =====
+  getIt.registerLazySingleton(() => TourRemoteDataSource(getIt()));
+  getIt.registerLazySingleton<TourRepository>(() => TourRepositoryImpl(getIt()));
+
+  // ===== Booking & Payment =====
+  getIt.registerLazySingleton(() => BookingRemoteDataSource(getIt()));
+  getIt.registerLazySingleton<BookingRepository>(() => BookingRepositoryImpl(getIt()));
+
+  // ===== Review =====
+  getIt.registerLazySingleton<ReviewRepository>(() => ReviewRepositoryImpl(getIt()));
+
+  // ===== Wishlist (lưu local) =====
+  final wishlist = WishlistLocalDataSource();
+  await wishlist.load();
+  getIt.registerSingleton<WishlistLocalDataSource>(wishlist);
 }

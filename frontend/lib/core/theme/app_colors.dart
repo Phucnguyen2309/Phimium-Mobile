@@ -1,98 +1,96 @@
 import 'package:flutter/material.dart';
 
-/// App Color Palette - "Midnight Crimson & Gold Stream" Design System
-/// Spec: Primary #FF2A4D, Secondary #FFB800, Tertiary #FFD700, Neutral #8E8E93, Background #000000
+/// Bảng màu Phimium Travel - "Saigon Jade & Saffron"
+/// Lấy cảm hứng từ hàng cây xanh, sông Sài Gòn (xanh ngọc) và
+/// ánh đèn đường phố / ẩm thực (cam nghệ), nền kem ấm như tường gạch cũ.
+///
+/// Primary  #0E7C66 (xanh ngọc)   Secondary #E8833A (cam nghệ)
+/// Tertiary #F6C453 (vàng nắng)   Background #FAF7F2 (kem ấm)
 class AppColors {
   AppColors._();
 
-  // Primary palette - Crimson Red
-  static const Color primary = Color(0xFFFF2A4D);
-  static const Color primaryLight = Color(0xFFFF536E);
-  static const Color primaryDark = Color(0xFFD91638);
-  static const Color primaryMuted = Color(0x33FF2A4D); // 20% alpha
+  // Primary - Jade green
+  static const Color primary = Color(0xFF0E7C66);
+  static const Color primaryLight = Color(0xFF14A085);
+  static const Color primaryDark = Color(0xFF0A5C4C);
+  static const Color primaryMuted = Color(0x1F0E7C66); // ~12% alpha
 
-  // Secondary palette - Amber / Gold
-  static const Color secondary = Color(0xFFFFB800);
-  static const Color secondaryLight = Color(0xFFFFC933);
-  static const Color secondaryDark = Color(0xFFD49700);
-  static const Color secondaryMuted = Color(0x33FFB800);
+  // Secondary - Saffron orange
+  static const Color secondary = Color(0xFFE8833A);
+  static const Color secondaryLight = Color(0xFFF2A766);
+  static const Color secondaryDark = Color(0xFFC4672A);
+  static const Color secondaryMuted = Color(0x1FE8833A);
 
-  // Tertiary palette - Yellow Gold
-  static const Color tertiary = Color(0xFFFFD700);
-  static const Color tertiaryLight = Color(0xFFFFE066);
+  // Tertiary - Sunshine yellow
+  static const Color tertiary = Color(0xFFF6C453);
+  static const Color tertiaryLight = Color(0xFFFBDD94);
 
-  // Neutral palette
-  static const Color neutral = Color(0xFF8E8E93);
-  static const Color neutralLight = Color(0xFFAEAEB2);
-  static const Color neutralDark = Color(0xFF636366);
+  // Neutral
+  static const Color neutral = Color(0xFF8A9499);
+  static const Color neutralLight = Color(0xFFB9C1C4);
+  static const Color neutralDark = Color(0xFF5F6B70);
 
-  // Background colors - Pure Black base as required by design
-  static const Color background = Color(0xFF000000);
-  static const Color surface = Color(0xFF101015);
-  static const Color surfaceLight = Color(0xFF181822);
-  static const Color cardBackground = Color(0xFF14141B);
-  static const Color cardBackgroundElevated = Color(0xFF1C1C26);
-  static const Color bottomNav = Color(0xFF0A0A0E);
+  // Backgrounds
+  static const Color background = Color(0xFFFAF7F2);
+  static const Color surface = Color(0xFFFFFFFF);
+  static const Color surfaceLight = Color(0xFFF3EEE6);
+  static const Color cardBackground = Color(0xFFFFFFFF);
+  static const Color cardBackgroundElevated = Color(0xFFFFFDF9);
+  static const Color bottomNav = Color(0xFFFFFFFF);
 
-  // Text colors
-  static const Color textPrimary = Color(0xFFFFFFFF);
-  static const Color textSecondary = Color(0xFF8E8E93);
-  static const Color textHint = Color(0xFF555562);
-  static const Color textDisabled = Color(0xFF3E3E4A);
+  // Text
+  static const Color textPrimary = Color(0xFF1F2A2E);
+  static const Color textSecondary = Color(0xFF5F6B70);
+  static const Color textHint = Color(0xFF9AA3A7);
+  static const Color textDisabled = Color(0xFFC5CBCE);
+  static const Color textOnPrimary = Color(0xFFFFFFFF);
 
   // Border & divider
-  static const Color border = Color(0xFF22222E);
-  static const Color borderLight = Color(0xFF2E2E3E);
-  static const Color divider = Color(0xFF1C1C26);
+  static const Color border = Color(0xFFE6E0D6);
+  static const Color borderLight = Color(0xFFEFEAE2);
+  static const Color divider = Color(0xFFECE6DC);
 
-  // Status colors
-  static const Color error = Color(0xFFFF3B30);
-  static const Color success = Color(0xFF34C759);
-  static const Color warning = Color(0xFFFF9500);
-  static const Color info = Color(0xFF5856D6);
+  // Status
+  static const Color error = Color(0xFFD64545);
+  static const Color success = Color(0xFF2E9E5B);
+  static const Color warning = Color(0xFFE8A33A);
+  static const Color info = Color(0xFF2F80ED);
 
-  // Badges & Special
-  static const Color hotBadge = Color(0xFFFF2A4D);
-  static const Color vipGold = Color(0xFFFFB800);
-  static const Color vipBg = Color(0xFF2A2000);
-  static const Color coinGold = Color(0xFFFFB800);
-  static const Color ratingStar = Color(0xFFFFB800);
-  static const Color chipInactive = Color(0xFF1A1A24);
+  // Travel-specific
+  static const Color foodTour = Color(0xFFE8833A); // Food tour - cam
+  static const Color historyTour = Color(0xFF8B5E3C); // History tour - nâu sepia
+  static const Color ratingStar = Color(0xFFF5B301);
+  static const Color chipInactive = Color(0xFFF3EEE6);
+  static const Color priceTag = Color(0xFF0A5C4C);
 
   // Gradients
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [Color(0xFFFF2A4D), Color(0xFFFF536E)],
+    colors: [Color(0xFF0E7C66), Color(0xFF14A085)],
     begin: Alignment.centerLeft,
     end: Alignment.centerRight,
   );
 
-  static const LinearGradient goldGradient = LinearGradient(
-    colors: [Color(0xFFFFB800), Color(0xFFFFD700)],
+  static const LinearGradient sunsetGradient = LinearGradient(
+    colors: [Color(0xFFE8833A), Color(0xFFF6C453)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  static const LinearGradient darkOverlay = LinearGradient(
+  /// Lớp phủ tối dưới ảnh để chữ trắng dễ đọc
+  static const LinearGradient imageOverlay = LinearGradient(
     colors: [
       Colors.transparent,
-      Color(0x40000000),
-      Color(0xCC000000),
-      Color(0xFF000000),
+      Color(0x33000000),
+      Color(0xB3000000),
     ],
-    stops: [0.0, 0.4, 0.75, 1.0],
+    stops: [0.0, 0.5, 1.0],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );
 
-  static const LinearGradient cardGradient = LinearGradient(
-    colors: [Color(0xFF181822), Color(0xFF12121A)],
+  static const LinearGradient placeholderGradient = LinearGradient(
+    colors: [Color(0xFFDDEFE9), Color(0xFFF7E6D6)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-  );
-
-  static const LinearGradient coinBannerGradient = LinearGradient(
-    colors: [Color(0xFF241A0A), Color(0xFF16141F)],
-    begin: Alignment.centerLeft,
-    end: Alignment.centerRight,
   );
 }

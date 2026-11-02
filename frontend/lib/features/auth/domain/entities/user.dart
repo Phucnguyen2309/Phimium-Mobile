@@ -1,25 +1,23 @@
 import 'package:equatable/equatable.dart';
 
-/// User entity - Domain layer
+/// User entity - Domain layer (khớp MeResponse / LoginResponse của BE)
 class User extends Equatable {
   final String id;
-  final String email;
+  final String email; // BE gọi là username
   final String fullName;
-  final String? avatarUrl;
-  final int coinBalance;
-  final String? phone;
-  final DateTime? createdAt;
+  final String role; // USER, BUDDY, ADMIN
+  final String? buddyId;
 
   const User({
     required this.id,
     required this.email,
     required this.fullName,
-    this.avatarUrl,
-    this.coinBalance = 0,
-    this.phone,
-    this.createdAt,
+    this.role = 'USER',
+    this.buddyId,
   });
 
+  bool get isBuddy => buddyId != null && buddyId!.isNotEmpty;
+
   @override
-  List<Object?> get props => [id, email, fullName, avatarUrl, coinBalance];
+  List<Object?> get props => [id, email, fullName, role, buddyId];
 }
