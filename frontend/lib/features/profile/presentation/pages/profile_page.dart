@@ -37,6 +37,12 @@ class ProfilePage extends StatelessWidget {
                   onTap: () => context.push(AppRouter.myBookings),
                 ),
                 _MenuTile(
+                  icon: Icons.receipt_long_outlined,
+                  title: 'Lịch sử thanh toán',
+                  subtitle: 'Xem giao dịch và kiểm tra thanh toán',
+                  onTap: () => context.push(AppRouter.payments),
+                ),
+                _MenuTile(
                   icon: Icons.rate_review_outlined,
                   title: AppStrings.myReviews,
                   subtitle: 'Đánh giá chuyến đi & Buddy',

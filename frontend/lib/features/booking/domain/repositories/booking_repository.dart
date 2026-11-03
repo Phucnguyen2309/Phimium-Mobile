@@ -19,4 +19,7 @@ abstract class BookingRepository {
 
   /// POST /api/payment/registration/{id}
   Future<PaymentCheckout> createPayment(String bookingId);
+
+  /// Read the authoritative payment status (never trust a browser redirect).
+  Future<String> getPaymentStatus(String paymentId);
 }

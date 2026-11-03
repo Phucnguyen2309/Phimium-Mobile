@@ -8,8 +8,13 @@ class BookingRemoteDataSource {
 
   BookingRemoteDataSource(this._client);
 
-  Future<Map<String, dynamic>> createRegistration(Map<String, dynamic> body) async {
-    final response = await _client.dio.post(ApiConstants.registrations, data: body);
+  Future<Map<String, dynamic>> createRegistration(
+    Map<String, dynamic> body,
+  ) async {
+    final response = await _client.dio.post(
+      ApiConstants.registrations,
+      data: body,
+    );
     return Map<String, dynamic>.from(unwrapData<Map>(response));
   }
 
@@ -22,8 +27,18 @@ class BookingRemoteDataSource {
   }
 
   Future<Map<String, dynamic>> cancelRegistration(String id) async {
-    final response = await _client.dio.post(ApiConstants.cancelRegistration(id));
+    final response = await _client.dio.post(
+      ApiConstants.cancelRegistration(id),
+    );
     return Map<String, dynamic>.from(unwrapData<Map>(response));
+  }
+
+  Future<String> getPaymentStatus(String paymentId) async {
+    final response = await _client.dio.get(
+      '/api/payment/${Uri.encodeComponent(paymentId)}',
+    );
+    final data = unwrapData<Map>(response);
+    return data['status'].toString();
   }
 
   Future<Map<String, dynamic>> createPayment(String registrationId) async {

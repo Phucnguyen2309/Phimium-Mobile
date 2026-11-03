@@ -22,7 +22,8 @@ class BookingRepositoryImpl implements BookingRepository {
       'adultCount': adultCount,
       'childCount': childCount,
       'isSafetyTermsAccepted': safetyTermsAccepted,
-      if (pickupLocation != null && pickupLocation.isNotEmpty) 'pickupLocation': pickupLocation,
+      if (pickupLocation != null && pickupLocation.isNotEmpty)
+        'pickupLocation': pickupLocation,
       if (couponCode != null && couponCode.isNotEmpty) 'couponCode': couponCode,
     };
     return BookingModel.fromJson(await _remote.createRegistration(body));
@@ -37,6 +38,10 @@ class BookingRepositoryImpl implements BookingRepository {
   @override
   Future<Booking> cancelBooking(String bookingId) async =>
       BookingModel.fromJson(await _remote.cancelRegistration(bookingId));
+
+  @override
+  Future<String> getPaymentStatus(String paymentId) =>
+      _remote.getPaymentStatus(paymentId);
 
   @override
   Future<PaymentCheckout> createPayment(String bookingId) async =>

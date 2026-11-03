@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+import '../../features/payment/presentation/payment_history_page.dart';
 
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
@@ -35,6 +36,7 @@ class AppRouter {
   static const String myBookings = '/bookings';
   static const String writeReview = '/bookings/:id/review';
   static const String myReviews = '/my-reviews';
+  static const String payments = '/payments';
 
   static final GoRouter router = GoRouter(
     initialLocation: home,
@@ -86,6 +88,8 @@ class AppRouter {
         path: booking,
         builder: (context, state) => BookingPage(tourId: state.pathParameters['id']!),
       ),
+
+      GoRoute(path: payments, builder: (context, state) => const PaymentHistoryPage()),
 
       // Booking & Review
       GoRoute(path: myBookings, builder: (context, state) => const MyBookingsPage()),

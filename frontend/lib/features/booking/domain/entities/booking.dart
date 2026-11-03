@@ -62,7 +62,7 @@ class Booking extends Equatable {
     this.paymentExpiresAt,
   });
 
-  bool get canPay => status == 'PENDING_PAYMENT' || status == 'BUDDY_ASSIGNED';
+  bool get canPay => status == 'PENDING_PAYMENT';
   bool get canReview => status == 'COMPLETED';
 
   @override

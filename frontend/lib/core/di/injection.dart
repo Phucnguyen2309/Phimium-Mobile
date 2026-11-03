@@ -1,4 +1,5 @@
 import 'package:get_it/get_it.dart';
+import '../../features/payment/data/payment_repository.dart';
 
 import '../../features/auth/data/datasources/auth_local_datasource.dart';
 import '../../features/auth/data/datasources/auth_remote_datasource.dart';
@@ -44,6 +45,8 @@ Future<void> configureDependencies() async {
   // ===== Tour =====
   getIt.registerLazySingleton(() => TourRemoteDataSource(getIt()));
   getIt.registerLazySingleton<TourRepository>(() => TourRepositoryImpl(getIt()));
+
+  getIt.registerLazySingleton(() => PaymentRepository(getIt()));
 
   // ===== Booking & Payment =====
   getIt.registerLazySingleton(() => BookingRemoteDataSource(getIt()));
