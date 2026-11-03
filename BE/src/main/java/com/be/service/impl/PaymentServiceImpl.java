@@ -84,6 +84,26 @@ public class PaymentServiceImpl implements PaymentService {
         if (expected == null || expected.isBlank()) throw new AppException(ErrorCode.SEPAY_NOT_CONFIGURED);
         if (secret == null || !MessageDigest.isEqual(expected.getBytes(StandardCharsets.UTF_8),
                 secret.getBytes(StandardCharsets.UTF_8))) throw new AppException(ErrorCode.INVALID_TOKEN);
+        applyVerifiedReceipt(request);
+    }
+
+    /** Internal boundary: only IPN authentication or a successful server-to-server lookup may call this. */
+    @Override
+    @Transactional
+    public void applyVerifiedReceipt(SePayWebhookRequest request) {
+        if (request == null || request.getOrder() == null || request.getTransaction() == null) {
+            throw new AppException(ErrorCode.INVALID_PAYMENT_NOTIFICATION);
+        }
+        var o = request.getOrder();
+        var t = request.getTransaction();
+        if (java.util.stream.Stream.of(o.getOrderInvoiceNumber(), o.getOrderId(), o.getOrderStatus(),
+                o.getOrderCurrency(), t.getTransactionType(), t.getTransactionStatus(),
+                t.getTransactionCurrency()).anyMatch(v -> v == null || v.isBlank())
+                || (t.getId() == null && (t.getTransactionId() == null || t.getTransactionId().isBlank()))
+                || o.getOrderAmount() == null || o.getOrderAmount().signum() <= 0
+                || t.getTransactionAmount() == null || t.getTransactionAmount().signum() <= 0) {
+            throw new AppException(ErrorCode.INVALID_PAYMENT_NOTIFICATION);
+        }
         if (!"ORDER_PAID".equals(request.getNotificationType())
                 && !"TRANSACTION_VOID".equals(request.getNotificationType())) {
             throw new AppException(ErrorCode.INVALID_PAYMENT_NOTIFICATION);
@@ -120,19 +140,32 @@ public class PaymentServiceImpl implements PaymentService {
                 || !"APPROVED".equals(transaction.getTransactionStatus())) {
             throw new AppException(ErrorCode.INVALID_PAYMENT_NOTIFICATION);
         }
-        paymentRepository.findByProviderTransactionId(transaction.getTransactionId()).ifPresent(other -> {
+        String transactionId = transaction.getTransactionId();
+        if (transactionId != null && transactionId.isBlank()) transactionId = null;
+        UUID receiptId = transaction.getId();
+        if (transactionId != null) paymentRepository.findByProviderTransactionId(transactionId).ifPresent(other -> {
             if (!other.getId().equals(payment.getId())) throw new AppException(ErrorCode.PAYMENT_TRANSACTION_DUPLICATED);
         });
-        if (payment.getProviderTransactionId() != null) {
-            if (!payment.getProviderTransactionId().equals(transaction.getTransactionId())) {
+        if (receiptId != null) paymentRepository.findByProviderReceiptId(receiptId).ifPresent(other -> {
+            if (!other.getId().equals(payment.getId())) throw new AppException(ErrorCode.PAYMENT_TRANSACTION_DUPLICATED);
+        });
+        if (payment.getProviderTransactionId() != null || payment.getProviderReceiptId() != null) {
+            boolean shortMatch = transactionId != null && transactionId.equals(payment.getProviderTransactionId());
+            boolean uuidMatch = receiptId != null && receiptId.equals(payment.getProviderReceiptId());
+            boolean shortConflict = transactionId != null && payment.getProviderTransactionId() != null && !shortMatch;
+            boolean uuidConflict = receiptId != null && payment.getProviderReceiptId() != null && !uuidMatch;
+            if (shortConflict || uuidConflict || !(shortMatch || uuidMatch))
                 throw new AppException(ErrorCode.PAYMENT_TRANSACTION_DUPLICATED);
-            }
-            return; // Authenticated retry of an already recorded receipt.
+            // Enrich the same receipt when IPN arrives after REST; never confirm/release twice.
+            if (transactionId != null) payment.setProviderTransactionId(transactionId);
+            if (receiptId != null) payment.setProviderReceiptId(receiptId);
+            return;
         }
         boolean review = payment.getStatus() == PaymentStatus.REVIEW_REQUIRED
                 || registration.getStatus() != RegistrationStatus.PENDING_PAYMENT || lifecycle.isExpired(registration) || !lifecycle.canFulfill(registration);
         payment.setProviderOrderId(order.getOrderId());
-        payment.setProviderTransactionId(transaction.getTransactionId());
+        payment.setProviderTransactionId(transactionId);
+        payment.setProviderReceiptId(receiptId);
         payment.setPaidAt(DateTimeUtils.nowVietnam());
         if (review) {
             if (registration.getStatus() == RegistrationStatus.PENDING_PAYMENT) lifecycle.release(registration);

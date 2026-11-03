@@ -66,7 +66,7 @@ class Booking extends Equatable {
     this.checkedInAt,
   });
 
-  bool get canPay => status == 'PENDING_PAYMENT' || status == 'BUDDY_ASSIGNED';
+  bool get canPay => status == 'PENDING_PAYMENT';
   bool get canReview => status == 'COMPLETED';
   bool get isCheckedIn => checkInStatus == 'CHECKED_IN' || checkedInAt != null;
   bool get canCheckIn => status == 'CONFIRMED' && !isCheckedIn;

@@ -50,6 +50,7 @@ dependencies:
   image_picker: ^1.1.2
   flutter_dotenv: ^5.2.1
   logger: ^2.5.0
+  webview_flutter: ^4.14.1
 
   # Đã bỏ: video_player, chewie, in_app_purchase (chỉ dùng cho app xem phim/mua xu)
 

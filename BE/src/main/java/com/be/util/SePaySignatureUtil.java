@@ -35,7 +35,9 @@ public class SePaySignatureUtil {
         );
 
         String data = order.stream()
-                .filter(fields :: containsKey)
+                .filter(key -> fields.get(key) != null
+                        && !fields.get(key).isEmpty()
+                        && !"0".equals(fields.get(key)))
                 .map(key -> key + "=" + fields.get(key))
                 .collect(Collectors.joining(","));
         try{

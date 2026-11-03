@@ -33,6 +33,8 @@ public class PaymentResponse {
 
     private String providerTransactionId;
 
+    private UUID providerReceiptId;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime paidAt;

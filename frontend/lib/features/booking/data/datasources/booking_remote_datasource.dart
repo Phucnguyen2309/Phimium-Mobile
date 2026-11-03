@@ -65,4 +65,9 @@ class BookingRemoteDataSource {
     final response = await _client.dio.get(ApiConstants.paymentDetail(paymentId));
     return Map<String, dynamic>.from(unwrapData<Map>(response));
   }
+
+  Future<String> getPaymentStatus(String paymentId) async {
+    final response = await _client.dio.get(ApiConstants.paymentDetail(paymentId));
+    return unwrapData<Map>(response)['status'].toString();
+  }
 }

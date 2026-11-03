@@ -36,4 +36,7 @@ abstract class BookingRepository {
 
   /// GET /api/payment/{id}
   Future<PaymentRecord> getPaymentDetail(String paymentId);
+
+  /// Read the authoritative status; a browser redirect is not proof of payment.
+  Future<String> getPaymentStatus(String paymentId);
 }

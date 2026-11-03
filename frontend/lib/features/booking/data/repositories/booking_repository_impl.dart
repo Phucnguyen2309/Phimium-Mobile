@@ -71,4 +71,8 @@ class BookingRepositoryImpl implements BookingRepository {
   @override
   Future<PaymentRecord> getPaymentDetail(String paymentId) async =>
       BookingModel.paymentRecordFromJson(await _remote.getPaymentDetail(paymentId));
+
+  @override
+  Future<String> getPaymentStatus(String paymentId) =>
+      _remote.getPaymentStatus(paymentId);
 }

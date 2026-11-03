@@ -1,0 +1,9 @@
+# Build context contains only Maven inputs, never local credentials/data.
+**
+!pom.xml
+!src/
+!src/**
+src/test/
+src/**/.env
+src/**/.env.*
+src/**/*.env

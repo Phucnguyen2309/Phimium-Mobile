@@ -1,7 +1,11 @@
-import 'dart:convert';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+
+import '../../../payment/domain/payment_record.dart';
+import '../../../payment/presentation/payment_widgets.dart';
+
+import '../pages/payment_checkout_page.dart';
 
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/di/injection.dart';
@@ -13,66 +17,152 @@ import '../../../../shared/widgets/app_feedback.dart';
 import '../../domain/entities/booking.dart';
 import '../../domain/repositories/booking_repository.dart';
 
-/// Hộp thoại tóm tắt đơn + tạo thanh toán chuyển khoản (SePay)
+/// Dialog tóm tắt đơn + tạo thanh toán chuyển khoản (SePay)
 Future<void> showPaymentSheet(BuildContext context, Booking booking) {
   return showDialog<void>(
     context: context,
-    builder: (_) => _PaymentDialog(booking: booking),
+    builder: (_) => Dialog(
+      backgroundColor: AppColors.surface,
+      surfaceTintColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: const BorderSide(color: AppColors.border),
+      ),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: _PaymentSheet(booking: booking),
+      ),
+    ),
   );
 }
 
-class _PaymentDialog extends StatefulWidget {
+class _PaymentSheet extends StatefulWidget {
   final Booking booking;
 
-  const _PaymentDialog({required this.booking});
+  const _PaymentSheet({required this.booking});
 
   @override
-  State<_PaymentDialog> createState() => _PaymentDialogState();
+  State<_PaymentSheet> createState() => _PaymentSheetState();
 }
 
-class _PaymentDialogState extends State<_PaymentDialog> {
+class _PaymentSheetState extends State<_PaymentSheet>
+    with WidgetsBindingObserver {
   bool _loading = false;
+  bool _checking = false;
   PaymentCheckout? _checkout;
+  String? _paymentStatus;
+  String? _statusError;
+  String? _statusNotice;
+  Timer? _refreshTimer;
 
-  Future<void> _openSepayCheckout(PaymentCheckout checkout) async {
-    final url = checkout.checkoutUrl;
-    if (url == null || url.isEmpty) return;
-
-    // Nếu SePay yêu cầu submit form POST kèm fields (giống Web submitSepayForm)
-    if (checkout.fields.isNotEmpty) {
-      final inputs = checkout.fields.entries
-          .map((e) =>
-              '<input type="hidden" name="${const HtmlEscape().convert(e.key)}" value="${const HtmlEscape().convert(e.value)}" />')
-          .join();
-      final html = '''
-<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><title>Đang chuyển tới SePay...</title></head>
-<body onload="document.forms[0].submit()">
-  <form method="POST" action="${const HtmlEscape().convert(url)}">$inputs</form>
-</body>
-</html>
-''';
-      final dataUri = Uri.dataFromString(
-        html,
-        mimeType: 'text/html',
-        encoding: utf8,
-      );
-      final launched = await launchUrl(dataUri, mode: LaunchMode.inAppBrowserView);
-      if (launched) return;
-    }
-
-    await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _refreshTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      if (mounted &&
+          !_loading &&
+          !_checking &&
+          _checkout != null &&
+          _paymentStatus == 'PENDING' &&
+          WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed &&
+          (ModalRoute.of(context)?.isCurrent ?? false)) {
+        _checkStatus();
+      }
+    });
   }
 
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _checkStatus();
+  }
+
+  Future<void> _checkStatus({
+    bool waitForIpn = false,
+    bool notify = false,
+  }) async {
+    String? feedback;
+    final checkout = _checkout;
+    if (checkout == null || _checking || !mounted) return;
+    setState(() {
+      _checking = true;
+      _statusError = null;
+      _statusNotice = null;
+    });
+    try {
+      for (var attempt = 0; attempt < (waitForIpn ? 6 : 1); attempt++) {
+        final status = await getIt<BookingRepository>().getPaymentStatus(
+          checkout.paymentId,
+        );
+        if (!mounted) return;
+        setState(() => _paymentStatus = status);
+        if (status != 'PENDING') break;
+        if (waitForIpn && attempt < 5) {
+          await Future<void>.delayed(const Duration(seconds: 2));
+          if (!mounted) return;
+        }
+      }
+      if (mounted) {
+        setState(
+          () => _statusNotice = paymentCheckMessage(_paymentStatus ?? ''),
+        );
+      }
+      feedback = 'Đã kiểm tra: ${paymentCheckMessage(_paymentStatus ?? '')}';
+    } catch (e) {
+      feedback = readableError(e);
+      if (mounted) setState(() => _statusError = feedback);
+    } finally {
+      if (mounted) {
+        setState(() => _checking = false);
+        if (notify && feedback != null) {
+          AppFeedback.info(context, feedback);
+        }
+      }
+    }
+  }
+
+  String get _statusLabel => switch (_paymentStatus) {
+    'PAID' => 'Thanh toán thành công',
+    'REVIEW_REQUIRED' =>
+      'Đang đối soát thanh toán. Vui lòng không thanh toán lại.',
+    'EXPIRED' => 'Thanh toán đã hết hạn',
+    'FAILED' => 'Thanh toán không thành công',
+    'CANCELLED' => 'Thanh toán đã hủy',
+    _ => 'Chờ xác nhận thanh toán',
+  };
+
   Future<void> _pay() async {
+    if (_loading || _checking) return;
     setState(() => _loading = true);
     try {
-      final checkout =
-          await getIt<BookingRepository>().createPayment(widget.booking.id);
+      if (_checkout != null) {
+        await _checkStatus();
+        if (!mounted || _statusError != null || _paymentStatus != 'PENDING') {
+          return;
+        }
+      }
+      final checkout = await getIt<BookingRepository>().createPayment(
+        widget.booking.id,
+      );
       if (!mounted) return;
-      setState(() => _checkout = checkout);
-      await _openSepayCheckout(checkout);
+      setState(() {
+        _checkout = checkout;
+        _paymentStatus = checkout.status;
+      });
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => PaymentCheckoutPage(checkout: checkout),
+        ),
+      );
+      if (mounted) await _checkStatus(waitForIpn: true);
     } catch (e) {
       if (!mounted) return;
       AppFeedback.error(context, readableError(e), title: 'Lỗi thanh toán');
@@ -84,126 +174,174 @@ class _PaymentDialogState extends State<_PaymentDialog> {
   @override
   Widget build(BuildContext context) {
     final b = widget.booking;
-    return Dialog(
-      backgroundColor: AppColors.surface,
-      surfaceTintColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: const BorderSide(color: AppColors.border),
-      ),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 420),
-        child: Padding(
-          padding: const EdgeInsets.all(22),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+    final paid = _paymentStatus == 'PAID';
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
             children: [
-              Center(
-                child: Container(
-                  width: 54,
-                  height: 54,
-                  decoration: BoxDecoration(
-                    color: AppColors.success.withValues(alpha: 0.12),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.check_circle_rounded,
-                    color: AppColors.success,
-                    size: 32,
-                  ),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: paid
+                      ? AppColors.success.withValues(alpha: 0.08)
+                      : AppColors.secondaryMuted,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  paid
+                      ? Icons.check_circle_outline_rounded
+                      : Icons.receipt_long_outlined,
+                  color: paid ? AppColors.success : AppColors.primary,
                 ),
               ),
-              const SizedBox(height: 12),
-              Text(
-                'Thông tin đơn đặt tour',
-                textAlign: TextAlign.center,
-                style: AppTextStyles.heading3,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                BookingStatus.label(b.status),
-                textAlign: TextAlign.center,
-                style: AppTextStyles.bodyMedium,
-              ),
-              const Divider(height: 24),
-              _line('Tour', b.tourTitle ?? '--'),
-              _line(
-                'Ngày đi',
-                '${Formatters.date(b.departureDate)} ${Formatters.time(b.startTime)}',
-              ),
-              _line(
-                'Số khách',
-                '${b.adultCount} người lớn, ${b.childCount} trẻ em',
-              ),
-              if ((b.discountAmount ?? 0) > 0)
-                _line('Giảm giá', '- ${Formatters.vnd(b.discountAmount)}'),
-              _line(AppStrings.total, Formatters.vnd(b.totalAmount), bold: true),
-              if (_checkout != null) ...[
-                const Divider(height: 24),
-                _line('Mã hoá đơn', _checkout!.invoiceNumber ?? '--'),
-                _line('Số tiền', Formatters.vnd(_checkout!.amount), bold: true),
-                const SizedBox(height: 6),
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: AppColors.background,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: Text(
-                    'Vui lòng chuyển khoản đúng nội dung mã hoá đơn. '
-                    'Hệ thống sẽ tự xác nhận khi nhận được tiền.',
-                    style: AppTextStyles.bodySmall,
-                  ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      paid ? 'Thanh toán thành công' : 'Thanh toán chuyến đi',
+                      style: AppTextStyles.heading3,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Chuyển khoản qua SePay',
+                      style: AppTextStyles.caption,
+                    ),
+                  ],
                 ),
-              ],
-              const SizedBox(height: 18),
-              if (_checkout == null)
-                ElevatedButton(
-                  onPressed: _loading ? null : _pay,
-                  child: _loading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2.2,
-                          ),
-                        )
-                      : const Text(AppStrings.payNow),
-                ),
-              const SizedBox(height: 6),
-              OutlinedButton(
+              ),
+              IconButton(
+                tooltip: 'Đóng',
                 onPressed: () => Navigator.of(context).pop(),
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size(0, 44),
-                ),
-                child: Text(_checkout == null ? 'Thanh toán sau' : 'Hoàn tất'),
+                icon: const Icon(Icons.close_rounded, size: 20),
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 20),
+          PaymentPanel(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('CHUYẾN ĐI', style: AppTextStyles.caption),
+                const SizedBox(height: 8),
+                Text(b.tourTitle ?? '--', style: AppTextStyles.labelBold),
+                const SizedBox(height: 16),
+                _tripLine(
+                  Icons.calendar_today_outlined,
+                  '${Formatters.date(b.departureDate)} · ${Formatters.time(b.startTime)}',
+                ),
+                const SizedBox(height: 8),
+                _tripLine(
+                  Icons.people_outline_rounded,
+                  '${b.adultCount} người lớn · ${b.childCount} trẻ em',
+                ),
+                const Divider(height: 28),
+                Text(
+                  paid ? 'Số tiền đã thanh toán' : 'Số tiền cần thanh toán',
+                  style: AppTextStyles.caption,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  Formatters.vnd(_checkout?.amount ?? b.totalAmount),
+                  style: AppTextStyles.heading1.copyWith(
+                    color: AppColors.primary,
+                  ),
+                ),
+                if ((b.discountAmount ?? 0) > 0) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    'Đã giảm ${Formatters.vnd(b.discountAmount)}',
+                    style: AppTextStyles.caption,
+                  ),
+                ],
+                if (_checkout != null) ...[
+                  const SizedBox(height: 12),
+                  PaymentStatusBadge(
+                    status: _paymentStatus ?? _checkout!.status ?? '',
+                  ),
+                  const Divider(height: 28),
+                  PaymentReferenceRow(
+                    label: 'Mã hóa đơn',
+                    value: _checkout!.invoiceNumber ?? '--',
+                    copyable: true,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          if (paid)
+            const PaymentNotice(
+              message: 'Khoản thanh toán đã được xác nhận. Theo dõi chuyến đi trong Chuyến đi của tôi.',
+            )
+          else if (_statusNotice != null)
+            PaymentNotice(message: _statusNotice!)
+          else
+            PaymentNotice(
+              message: _checkout == null
+                  ? (b.canPay
+                        ? 'Đơn đặt tour đã được tạo. Hoàn tất thanh toán để xác nhận chuyến đi.'
+                        : BookingStatus.label(b.status))
+                  : _statusLabel,
+            ),
+          if (_statusError != null) ...[
+            const SizedBox(height: 12),
+            PaymentNotice(message: _statusError!, isError: true),
+          ],
+          const SizedBox(height: 20),
+          if (b.canPay && (_checkout == null || _paymentStatus == 'PENDING'))
+            ElevatedButton.icon(
+              onPressed: (_loading || _checking) ? null : _pay,
+              icon: _loading
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.lock_outline_rounded, size: 18),
+              label: Text(
+                _loading
+                    ? 'Đang mở thanh toán…'
+                    : (_checkout == null
+                          ? AppStrings.payNow
+                          : 'Tiếp tục thanh toán'),
+              ),
+            ),
+          if (_checkout != null && !paid) ...[
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: (_checking || _loading)
+                  ? null
+                  : () => _checkStatus(waitForIpn: true, notify: true),
+              icon: const Icon(Icons.refresh_rounded, size: 20),
+              label: Text(_checking ? 'Đang kiểm tra…' : 'Kiểm tra thanh toán'),
+            ),
+          ],
+          const SizedBox(height: 8),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(
+              _checkout == null && b.canPay ? 'Thanh toán sau' : 'Đóng',
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _line(String label, String value, {bool bold = false}) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label, style: AppTextStyles.bodyMedium),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                value,
-                textAlign: TextAlign.right,
-                style: bold ? AppTextStyles.price : AppTextStyles.labelMedium,
-              ),
-            ),
-          ],
-        ),
-      );
+  Widget _tripLine(IconData icon, String text) => Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Icon(icon, size: 18, color: AppColors.neutral),
+      const SizedBox(width: 8),
+      Expanded(child: Text(text, style: AppTextStyles.bodyMedium)),
+    ],
+  );
 }

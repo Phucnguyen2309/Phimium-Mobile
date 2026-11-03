@@ -36,6 +36,7 @@ class AppRouter {
   static const String buddyReviews = '/buddy/:buddyId/reviews';
   static const String myBookings = '/bookings';
   static const String paymentHistory = '/payment-history';
+  static const String payments = '/payments';
   static const String buddyWorkspace = '/buddy-workspace';
   static const String writeReview = '/bookings/:id/review';
   static const String myReviews = '/my-reviews';
@@ -90,6 +91,8 @@ class AppRouter {
         path: booking,
         builder: (context, state) => BookingPage(tourId: state.pathParameters['id']!),
       ),
+
+      GoRoute(path: payments, redirect: (context, state) => paymentHistory),
 
       // Booking, Payment, Buddy & Review
       GoRoute(path: myBookings, builder: (context, state) => const MyBookingsPage()),
