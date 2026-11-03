@@ -17,6 +17,9 @@ public interface PaymentService {
 
     void processPayment(SePayWebhookRequest request, String secret);
 
+    /** Trusted server-side provider receipt only; never bind this to client payloads. */
+    void applyVerifiedReceipt(SePayWebhookRequest request);
+
     Page<PaymentResponse> getMyPayments(Pageable pageable, UUID userId);
 
     PaymentResponse getPaymentHistory(UUID paymentId,UUID userId);

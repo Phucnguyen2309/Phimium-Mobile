@@ -16,6 +16,33 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface PaymentRepository extends JpaRepository<Payment, UUID>, JpaSpecificationExecutor<Payment> {
+    interface ReconciliationCandidate {
+        UUID getId();
+        UUID getOwnerId();
+    }
+
+    @Query("""
+        select p.id as id, p.registration.user.userId as ownerId from Payment p
+        where p.provider = 'SEPAY' and p.status = :status
+          and p.createdAt <= :createdBefore
+          and (p.lastAutoReconciledAt is null or p.lastAutoReconciledAt <= :dueBefore)
+        order by coalesce(p.lastAutoReconciledAt, p.createdAt), p.id
+        """)
+    List<ReconciliationCandidate> findAutoReconciliationCandidates(
+            @Param("status") PaymentStatus status,
+            @Param("createdBefore") java.time.LocalDateTime createdBefore,
+            @Param("dueBefore") java.time.LocalDateTime dueBefore, Pageable pageable);
+
+    @org.springframework.transaction.annotation.Transactional
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("""
+        update Payment p set p.lastAutoReconciledAt = :now
+        where p.id = :id and p.provider = 'SEPAY' and p.status = :status
+          and (p.lastAutoReconciledAt is null or p.lastAutoReconciledAt <= :dueBefore)
+        """)
+    int claimAutoReconciliation(@Param("id") UUID id, @Param("status") PaymentStatus status,
+            @Param("now") java.time.LocalDateTime now, @Param("dueBefore") java.time.LocalDateTime dueBefore);
+
     Optional<Payment> findByInvoiceNumber(String invoiceNumber);
 
     @org.springframework.data.jpa.repository.Query("select p.registration.registrationId from Payment p where p.invoiceNumber = :invoice")
@@ -31,6 +58,8 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID>, JpaSpec
     Optional<Payment> findByIdWithLock(@org.springframework.data.repository.query.Param("id") UUID id);
 
     Optional<Payment> findByProviderTransactionId(String providerTransactionId);
+
+    Optional<Payment> findByProviderReceiptId(UUID providerReceiptId);
 
     Page<Payment> findByRegistrationUserUserId(UUID userId, Pageable pageable);
 

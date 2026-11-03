@@ -30,6 +30,7 @@ public class SePayWebhookRequest {
     @Data
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public static class Transaction {
+        private java.util.UUID id;
         @NotBlank private String transactionId;
         @NotBlank private String transactionType;
         @NotBlank private String transactionStatus;

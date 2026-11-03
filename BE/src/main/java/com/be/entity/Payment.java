@@ -49,6 +49,13 @@ public class Payment {
     @Column(unique = true)
     private String providerTransactionId;
 
+    /** SePay transaction UUID shared by REST detail and IPN; distinct from transaction_id. */
+    @Column(unique = true)
+    private UUID providerReceiptId;
+
+    /** Persistent scheduler claim; does not alter payment status or receipt. */
+    private LocalDateTime lastAutoReconciledAt;
+
     private String provider;
 
     private String description;
