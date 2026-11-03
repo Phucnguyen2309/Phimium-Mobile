@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../../domain/entities/booking.dart';
 import '../widgets/checkout_form.dart';
 
@@ -81,11 +83,28 @@ class _PaymentCheckoutPageState extends State<PaymentCheckoutPage> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(_error!),
+                  const Icon(
+                    Icons.cloud_off_rounded,
+                    color: AppColors.neutral,
+                    size: 48,
+                  ),
                   const SizedBox(height: 16),
-                  TextButton(
+                  Text(
+                    'Chưa mở được thanh toán',
+                    style: AppTextStyles.heading3,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _error!,
+                    style: AppTextStyles.bodyMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  OutlinedButton.icon(
                     onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Quay lại kiểm tra thanh toán'),
+                    icon: const Icon(Icons.arrow_back_rounded, size: 18),
+                    label: const Text('Quay lại kiểm tra thanh toán'),
                   ),
                 ],
               ),

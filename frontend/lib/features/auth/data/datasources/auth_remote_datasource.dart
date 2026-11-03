@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/network/api_result.dart';
 import '../../../../core/network/dio_client.dart';
@@ -25,15 +27,20 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       ApiConstants.login,
       data: {'email': email, 'password': password},
     );
-    final data = unwrapData<Map<String, dynamic>>(response);
+    final raw = unwrapData<dynamic>(response);
+    final data = raw is Map ? Map<String, dynamic>.from(raw) : <String, dynamic>{};
     final tokens = TokenCookies.fromResponse(response, data);
-    if (tokens.access.isEmpty) {
+
+    // Trên trình duyệt (kIsWeb), BE trả token qua HttpOnly cookie nên JS không đọc được Set-Cookie,
+    // trình duyệt sẽ tự động lưu và gửi cookie nhờ withCredentials: true.
+    if (!kIsWeb && tokens.access.isEmpty) {
       throw Exception('Đăng nhập thành công nhưng không nhận được token từ BE.');
     }
+
     return AuthSession.fromJson({
       ...data,
-      'accessToken': tokens.access,
-      'refreshToken': tokens.refresh,
+      'accessToken': tokens.access.isNotEmpty ? tokens.access : 'cookie_session',
+      'refreshToken': tokens.refresh.isNotEmpty ? tokens.refresh : 'cookie_session',
     });
   }
 
@@ -60,6 +67,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<UserModel> getMe() async {
     final response = await _client.dio.get(ApiConstants.me);
-    return UserModel.fromJson(unwrapData<Map<String, dynamic>>(response));
+    final raw = unwrapData<dynamic>(response);
+    return UserModel.fromJson(
+      raw is Map ? Map<String, dynamic>.from(raw) : <String, dynamic>{},
+    );
   }
 }

@@ -5,10 +5,13 @@ import '../domain/payment_record.dart';
 class PaymentRepository {
   final DioClient client;
   PaymentRepository(this.client);
-  Future<PaymentPage> history(int page) async {
+  Future<PaymentPage> history(
+    int page, {
+    String sort = 'createdAt,desc',
+  }) async {
     final r = await client.dio.get(
       '/api/payment/me',
-      queryParameters: {'page': page, 'size': 10},
+      queryParameters: {'page': page, 'size': 10, 'sort': sort},
     );
     return PaymentPage.fromJson(Map<String, dynamic>.from(unwrapData<Map>(r)));
   }

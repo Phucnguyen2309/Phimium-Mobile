@@ -58,11 +58,31 @@ class Tour extends Equatable {
 
   /// Các lịch khởi hành còn mở, từ hôm nay trở đi
   List<TourDeparture> get upcomingDepartures {
-    final today = DateTime.now();
-    final start = DateTime(today.year, today.month, today.day);
-    final list = departures
-        .where((d) => d.date != null && !d.date!.isBefore(start))
-        .toList()
+    final now = DateTime.now();
+    final start = DateTime(now.year, now.month, now.day);
+    final list = departures.where((d) {
+      if (d.date == null) return false;
+      final status = (d.status ?? '').toUpperCase();
+      if (status == 'CANCELLED' || status == 'COMPLETED' || status == 'CLOSED') {
+        return false;
+      }
+      final day = DateTime(d.date!.year, d.date!.month, d.date!.day);
+      if (day.isBefore(start)) return false;
+      if (day.isAtSameMomentAs(start)) {
+        final timeStr = d.endTime ?? d.startTime;
+        if (timeStr != null && timeStr.isNotEmpty) {
+          final parts = timeStr.split(':');
+          if (parts.length >= 2) {
+            final h = int.tryParse(parts[0]) ?? 23;
+            final m = int.tryParse(parts[1]) ?? 59;
+            if (DateTime(day.year, day.month, day.day, h, m).isBefore(now)) {
+              return false;
+            }
+          }
+        }
+      }
+      return true;
+    }).toList()
       ..sort((a, b) => a.date!.compareTo(b.date!));
     return list;
   }
@@ -139,6 +159,26 @@ class TourDeparture extends Equatable {
 
   @override
   List<Object?> get props => [id];
+}
+
+/// Cẩm nang & quy tắc an toàn của tour (GlobalGuidelineResponse)
+class TourGuideline extends Equatable {
+  final String id;
+  final String title;
+  final String? content;
+  final String? safetyRules;
+  final String? languageCode;
+
+  const TourGuideline({
+    required this.id,
+    required this.title,
+    this.content,
+    this.safetyRules,
+    this.languageCode,
+  });
+
+  @override
+  List<Object?> get props => [id, title];
 }
 
 /// Chuyến đi đã đặt của user (MyActivityResponse)

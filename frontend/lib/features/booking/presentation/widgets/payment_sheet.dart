@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../../payment/domain/payment_record.dart';
+import '../../../payment/presentation/payment_widgets.dart';
 
 import '../pages/payment_checkout_page.dart';
 
@@ -12,19 +13,27 @@ import '../../../../core/network/api_result.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/formatters.dart';
+import '../../../../shared/widgets/app_feedback.dart';
 import '../../domain/entities/booking.dart';
 import '../../domain/repositories/booking_repository.dart';
 
-/// Bottom sheet tóm tắt đơn + tạo thanh toán chuyển khoản (SePay)
+/// Dialog tóm tắt đơn + tạo thanh toán chuyển khoản (SePay)
 Future<void> showPaymentSheet(BuildContext context, Booking booking) {
-  return showModalBottomSheet<void>(
+  return showDialog<void>(
     context: context,
-    isScrollControlled: true,
-    backgroundColor: AppColors.surface,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    builder: (_) => Dialog(
+      backgroundColor: AppColors.surface,
+      surfaceTintColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: const BorderSide(color: AppColors.border),
+      ),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: _PaymentSheet(booking: booking),
+      ),
     ),
-    builder: (_) => _PaymentSheet(booking: booking),
   );
 }
 
@@ -114,9 +123,7 @@ class _PaymentSheetState extends State<_PaymentSheet>
       if (mounted) {
         setState(() => _checking = false);
         if (notify && feedback != null) {
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(SnackBar(content: Text(feedback)));
+          AppFeedback.info(context, feedback);
         }
       }
     }
@@ -158,8 +165,7 @@ class _PaymentSheetState extends State<_PaymentSheet>
       if (mounted) await _checkStatus(waitForIpn: true);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(readableError(e))));
+      AppFeedback.error(context, readableError(e), title: 'Lỗi thanh toán');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -168,143 +174,174 @@ class _PaymentSheetState extends State<_PaymentSheet>
   @override
   Widget build(BuildContext context) {
     final b = widget.booking;
-    return SafeArea(
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+    final paid = _paymentStatus == 'PAID';
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
             children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppColors.border,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: paid
+                      ? AppColors.success.withValues(alpha: 0.08)
+                      : AppColors.secondaryMuted,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  paid
+                      ? Icons.check_circle_outline_rounded
+                      : Icons.receipt_long_outlined,
+                  color: paid ? AppColors.success : AppColors.primary,
                 ),
               ),
-              const SizedBox(height: 16),
-              Icon(
-                _paymentStatus == 'PAID'
-                    ? Icons.check_circle_rounded
-                    : Icons.receipt_long_rounded,
-                color: AppColors.success,
-                size: 48,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                _paymentStatus == 'PAID'
-                    ? 'Thanh toán thành công'
-                    : 'Đã tạo đơn đặt tour',
-                textAlign: TextAlign.center,
-                style: AppTextStyles.heading3,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                _paymentStatus == 'PAID'
-                    ? 'Đã được hệ thống xác nhận'
-                    : (_checkout == null
-                          ? BookingStatus.label(b.status)
-                          : _statusLabel),
-                textAlign: TextAlign.center,
-                style: AppTextStyles.bodyMedium,
-              ),
-              const Divider(height: 28),
-              _line('Tour', b.tourTitle ?? '--'),
-              _line(
-                'Ngày đi',
-                '${Formatters.date(b.departureDate)} ${Formatters.time(b.startTime)}',
-              ),
-              _line(
-                'Số khách',
-                '${b.adultCount} người lớn, ${b.childCount} trẻ em',
-              ),
-              if ((b.discountAmount ?? 0) > 0)
-                _line('Giảm giá', '- ${Formatters.vnd(b.discountAmount)}'),
-              _line(
-                AppStrings.total,
-                Formatters.vnd(b.totalAmount),
-                bold: true,
-              ),
-              if (_checkout != null) ...[
-                const Divider(height: 28),
-                _line('Mã hoá đơn', _checkout!.invoiceNumber ?? '--'),
-                _line('Số tiền', Formatters.vnd(_checkout!.amount), bold: true),
-                const SizedBox(height: 4),
-                Text(
-                  _paymentStatus == 'PAID'
-                      ? 'Bạn có thể xem thông tin chuyến đi trong Đơn đặt tour.'
-                      : 'Nếu vừa thanh toán, vui lòng chờ xác nhận; không chuyển tiền lần nữa.',
-                  style: AppTextStyles.bodySmall,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      paid ? 'Thanh toán thành công' : 'Thanh toán chuyến đi',
+                      style: AppTextStyles.heading3,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Chuyển khoản qua SePay',
+                      style: AppTextStyles.caption,
+                    ),
+                  ],
                 ),
-              ],
-              const SizedBox(height: 16),
-              if (b.canPay &&
-                  (_checkout == null || _paymentStatus == 'PENDING'))
-                ElevatedButton(
-                  onPressed: (_loading || _checking) ? null : _pay,
-                  child: _loading
-                      ? const SizedBox(
-                          width: 22,
-                          height: 22,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2.4,
-                          ),
-                        )
-                      : Text(
-                          _checkout == null
-                              ? AppStrings.payNow
-                              : 'Mở lại thanh toán',
-                        ),
-                ),
-              if (_checkout != null && _paymentStatus != 'PAID')
-                TextButton(
-                  onPressed: (_checking || _loading)
-                      ? null
-                      : () => _checkStatus(waitForIpn: true, notify: true),
-                  child: Text(
-                    _checking
-                        ? 'Đang kiểm tra thanh toán…'
-                        : 'Kiểm tra thanh toán',
-                  ),
-                ),
-              if (_statusNotice != null)
-                Semantics(
-                  liveRegion: true,
-                  child: Text(_statusNotice!, style: AppTextStyles.bodySmall),
-                ),
-              if (_statusError != null)
-                Text(_statusError!, style: AppTextStyles.bodySmall),
-              TextButton(
+              ),
+              IconButton(
+                tooltip: 'Đóng',
                 onPressed: () => Navigator.of(context).pop(),
-                child: Text(_checkout == null ? 'Thanh toán sau' : 'Xong'),
+                icon: const Icon(Icons.close_rounded, size: 20),
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 20),
+          PaymentPanel(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('CHUYẾN ĐI', style: AppTextStyles.caption),
+                const SizedBox(height: 8),
+                Text(b.tourTitle ?? '--', style: AppTextStyles.labelBold),
+                const SizedBox(height: 16),
+                _tripLine(
+                  Icons.calendar_today_outlined,
+                  '${Formatters.date(b.departureDate)} · ${Formatters.time(b.startTime)}',
+                ),
+                const SizedBox(height: 8),
+                _tripLine(
+                  Icons.people_outline_rounded,
+                  '${b.adultCount} người lớn · ${b.childCount} trẻ em',
+                ),
+                const Divider(height: 28),
+                Text(
+                  paid ? 'Số tiền đã thanh toán' : 'Số tiền cần thanh toán',
+                  style: AppTextStyles.caption,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  Formatters.vnd(_checkout?.amount ?? b.totalAmount),
+                  style: AppTextStyles.heading1.copyWith(
+                    color: AppColors.primary,
+                  ),
+                ),
+                if ((b.discountAmount ?? 0) > 0) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    'Đã giảm ${Formatters.vnd(b.discountAmount)}',
+                    style: AppTextStyles.caption,
+                  ),
+                ],
+                if (_checkout != null) ...[
+                  const SizedBox(height: 12),
+                  PaymentStatusBadge(
+                    status: _paymentStatus ?? _checkout!.status ?? '',
+                  ),
+                  const Divider(height: 28),
+                  PaymentReferenceRow(
+                    label: 'Mã hóa đơn',
+                    value: _checkout!.invoiceNumber ?? '--',
+                    copyable: true,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          if (paid)
+            const PaymentNotice(
+              message: 'Khoản thanh toán đã được xác nhận. Theo dõi chuyến đi trong Chuyến đi của tôi.',
+            )
+          else if (_statusNotice != null)
+            PaymentNotice(message: _statusNotice!)
+          else
+            PaymentNotice(
+              message: _checkout == null
+                  ? (b.canPay
+                        ? 'Đơn đặt tour đã được tạo. Hoàn tất thanh toán để xác nhận chuyến đi.'
+                        : BookingStatus.label(b.status))
+                  : _statusLabel,
+            ),
+          if (_statusError != null) ...[
+            const SizedBox(height: 12),
+            PaymentNotice(message: _statusError!, isError: true),
+          ],
+          const SizedBox(height: 20),
+          if (b.canPay && (_checkout == null || _paymentStatus == 'PENDING'))
+            ElevatedButton.icon(
+              onPressed: (_loading || _checking) ? null : _pay,
+              icon: _loading
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.lock_outline_rounded, size: 18),
+              label: Text(
+                _loading
+                    ? 'Đang mở thanh toán…'
+                    : (_checkout == null
+                          ? AppStrings.payNow
+                          : 'Tiếp tục thanh toán'),
+              ),
+            ),
+          if (_checkout != null && !paid) ...[
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: (_checking || _loading)
+                  ? null
+                  : () => _checkStatus(waitForIpn: true, notify: true),
+              icon: const Icon(Icons.refresh_rounded, size: 20),
+              label: Text(_checking ? 'Đang kiểm tra…' : 'Kiểm tra thanh toán'),
+            ),
+          ],
+          const SizedBox(height: 8),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(
+              _checkout == null && b.canPay ? 'Thanh toán sau' : 'Đóng',
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _line(String label, String value, {bool bold = false}) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 3),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: AppTextStyles.bodyMedium),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            value,
-            textAlign: TextAlign.right,
-            style: bold ? AppTextStyles.price : AppTextStyles.labelMedium,
-          ),
-        ),
-      ],
-    ),
+  Widget _tripLine(IconData icon, String text) => Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Icon(icon, size: 18, color: AppColors.neutral),
+      const SizedBox(width: 8),
+      Expanded(child: Text(text, style: AppTextStyles.bodyMedium)),
+    ],
   );
 }

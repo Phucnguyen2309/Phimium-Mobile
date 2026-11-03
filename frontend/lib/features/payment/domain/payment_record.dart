@@ -6,6 +6,8 @@ class PaymentRecord {
   final String? receiptId;
   final double amount;
   final DateTime? createdAt, paidAt;
+  final String? tourTitle, startTime;
+  final DateTime? departureDate;
   const PaymentRecord({
     required this.id,
     required this.registrationId,
@@ -17,6 +19,9 @@ class PaymentRecord {
     this.receiptId,
     this.createdAt,
     this.paidAt,
+    this.tourTitle,
+    this.startTime,
+    this.departureDate,
   });
   factory PaymentRecord.fromJson(Map<String, dynamic> json) => PaymentRecord(
     id: json['id'].toString(),
@@ -29,6 +34,9 @@ class PaymentRecord {
     receiptId: json['providerReceiptId']?.toString(),
     createdAt: Formatters.toDate(json['createdAt']),
     paidAt: Formatters.toDate(json['paidAt']),
+    tourTitle: json['tourTitle']?.toString(),
+    startTime: json['startTime']?.toString(),
+    departureDate: Formatters.toDate(json['departureDate']),
   );
   bool get canReconcile => ['PENDING', 'EXPIRED', 'FAILED'].contains(status);
   String get statusLabel => paymentStatusLabel(status);

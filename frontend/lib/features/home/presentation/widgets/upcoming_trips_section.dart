@@ -11,10 +11,11 @@ import '../../../../core/utils/formatters.dart';
 import '../../../../shared/widgets/app_cached_image.dart';
 import '../../../tour/domain/entities/tour.dart';
 import '../../../tour/domain/repositories/tour_repository.dart';
+import '../../../tour/presentation/widgets/tour_card.dart';
 import 'horizontal_tour_row.dart';
 
 /// Chuyến đi sắp tới của user (GET /api/activity/joined).
-/// Chỉ hiện khi đã đăng nhập và có chuyến; lỗi thì ẩn đi.
+/// Chỉ hiện các chuyến chưa qua ngày/giờ khởi hành và chưa hủy/hoàn thành.
 class UpcomingTripsSection extends StatefulWidget {
   const UpcomingTripsSection({super.key});
 
@@ -25,12 +26,50 @@ class UpcomingTripsSection extends StatefulWidget {
 class _UpcomingTripsSectionState extends State<UpcomingTripsSection> {
   late final Future<List<MyTrip>> _future = getIt<TourRepository>().getMyTrips();
 
+  bool _isUpcoming(MyTrip trip, DateTime now) {
+    final status = (trip.status ?? '').toUpperCase();
+    if (status == 'CANCELLED' || status == 'COMPLETED') {
+      return false;
+    }
+    final date = trip.departureDate;
+    if (date == null) return false;
+
+    final today = DateTime(now.year, now.month, now.day);
+    final tripDay = DateTime(date.year, date.month, date.day);
+
+    if (tripDay.isBefore(today)) {
+      return false;
+    }
+
+    if (tripDay.isAtSameMomentAs(today)) {
+      final timeStr = trip.endTime ?? trip.startTime;
+      if (timeStr != null && timeStr.isNotEmpty) {
+        final parts = timeStr.split(':');
+        if (parts.length >= 2) {
+          final h = int.tryParse(parts[0]) ?? 23;
+          final m = int.tryParse(parts[1]) ?? 59;
+          final tripDateTime = DateTime(date.year, date.month, date.day, h, m);
+          if (tripDateTime.isBefore(now)) {
+            return false;
+          }
+        }
+      }
+    }
+
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<MyTrip>>(
       future: _future,
       builder: (context, snapshot) {
-        final trips = snapshot.data ?? const <MyTrip>[];
+        final now = DateTime.now();
+        final trips = (snapshot.data ?? const <MyTrip>[])
+            .where((t) => _isUpcoming(t, now))
+            .toList()
+          ..sort((a, b) => a.departureDate!.compareTo(b.departureDate!));
+
         if (snapshot.hasError || trips.isEmpty) return const SizedBox.shrink();
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -70,8 +109,16 @@ class _TripCard extends StatelessWidget {
         width: 270,
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: AppColors.primaryMuted,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppDimens.radiusLg),
+          border: Border.all(color: AppColors.border),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -80,6 +127,7 @@ class _TripCard extends StatelessWidget {
               width: 64,
               height: 72,
               borderRadius: BorderRadius.circular(AppDimens.radiusMd),
+              placeholderIcon: trip.type.icon,
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -87,16 +135,27 @@ class _TripCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(trip.title,
-                      maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextStyles.tourTitle),
+                  Text(
+                    trip.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.tourTitle,
+                  ),
                   const SizedBox(height: 4),
                   Text(
                     '${Formatters.date(trip.departureDate)} • ${Formatters.time(trip.startTime)}',
-                    style: AppTextStyles.caption.copyWith(color: AppColors.primaryDark),
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   if (trip.hostBuddyName != null)
-                    Text('Buddy: ${trip.hostBuddyName}',
-                        maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextStyles.caption),
+                    Text(
+                      'Buddy: ${trip.hostBuddyName}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.caption,
+                    ),
                 ],
               ),
             ),

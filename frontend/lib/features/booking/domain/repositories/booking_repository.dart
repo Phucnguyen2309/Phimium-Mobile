@@ -1,6 +1,14 @@
 import '../entities/booking.dart';
 
 abstract class BookingRepository {
+  /// POST /api/v1/pricing/quote
+  Future<PriceQuote> getPriceQuote({
+    required String departureId,
+    required int adultCount,
+    required int childCount,
+    String? couponCode,
+  });
+
   /// POST /api/v1/registrations
   Future<Booking> createBooking({
     required String departureId,
@@ -17,9 +25,18 @@ abstract class BookingRepository {
   /// POST /api/v1/registrations/{id}/cancel
   Future<Booking> cancelBooking(String bookingId);
 
+  /// POST /api/v1/registrations/{id}/check-in
+  Future<Booking> checkInBooking(String bookingId);
+
   /// POST /api/payment/registration/{id}
   Future<PaymentCheckout> createPayment(String bookingId);
 
-  /// Read the authoritative payment status (never trust a browser redirect).
+  /// GET /api/payment/me
+  Future<List<PaymentRecord>> getMyPayments({int page = 0, int size = 20});
+
+  /// GET /api/payment/{id}
+  Future<PaymentRecord> getPaymentDetail(String paymentId);
+
+  /// Read the authoritative status; a browser redirect is not proof of payment.
   Future<String> getPaymentStatus(String paymentId);
 }
